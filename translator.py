@@ -338,6 +338,17 @@ def main(url,
 def cli():
     parser = argparse.ArgumentParser(description="Parameters for translator.py")
     parser.add_argument('URL', type=str, help='Stream website and channel name, e.g. twitch.tv/forsen')
+    parser.add_argument('--frame_duration', type=float, default=0.1,
+                        help='The unit that processes live streaming data in seconds.')
+    parser.add_argument('--continuous_no_speech_threshold', type=float, default=0.8,
+                        help='Slice if there is no speech for a continuous period in second.')
+    parser.add_argument('--min_audio_length', type=float, default=3.0,
+                        help='Minimum slice audio length in seconds.')
+    parser.add_argument('--max_audio_length', type=float, default=30.0,
+                        help='Maximum slice audio length in seconds.')
+    parser.add_argument('--vad_threshold', type=float, default=0.5,
+                        help='The threshold of Voice activity detection.'
+                             'if the speech probability of a frame is higher than this value, then this frame is speech.')
     parser.add_argument('--model', type=str,
                         choices=['tiny', 'tiny.en', 'small', 'small.en', 'medium', 'medium.en', 'large'],
                         default='small',
@@ -351,30 +362,6 @@ def cli():
                              'See https://github.com/openai/whisper for available languages.')
     parser.add_argument('--whisper_filters', type=str, default='emoji_filter',
                         help='Filters apply to whisper results, separated by ",".')
-    parser.add_argument('--gpt_translation_prompt', type=str, default=None,
-                        help='If set, will translate the result text to target language via ChatGPT API.'
-                             'Example: \"Translate from Japanese to Chinese\"')
-    parser.add_argument('--openai_api_key', type=str, default=None,
-                        help='OpenAI API key for using ChatGPT translation.')
-    parser.add_argument('--gpt_model', type=str, default="gpt-3.5-turbo",
-                        help='GPT model name, gpt-3.5-turbo or gpt-4')
-    parser.add_argument('--gpt_translation_timeout', type=int, default=15,
-                        help='If the ChatGPT translation exceeds this number of seconds, the translation will be discarded.')
-    parser.add_argument('--cqhttp_url', type=str, default=None,
-                        help='If set, will send the result text to the cqhttp server.')
-    parser.add_argument('--cqhttp_token', type=str, default=None,
-                        help='Token of cqhttp, if it is not set on the server side, it does not need to fill in.')
-    parser.add_argument('--frame_duration', type=float, default=0.1,
-                        help='The unit that processes live streaming data in seconds.')
-    parser.add_argument('--continuous_no_speech_threshold', type=float, default=0.8,
-                        help='Slice if there is no speech for a continuous period in second.')
-    parser.add_argument('--min_audio_length', type=float, default=3.0,
-                        help='Minimum slice audio length in seconds.')
-    parser.add_argument('--max_audio_length', type=float, default=30.0,
-                        help='Maximum slice audio length in seconds.')
-    parser.add_argument('--vad_threshold', type=float, default=0.5,
-                        help='The threshold of Voice activity detection.'
-                             'if the speech probability of a frame is higher than this value, then this frame is speech.')
     parser.add_argument('--history_buffer_size', type=int, default=0,
                         help='Times of previous audio/text to use for conditioning the model. Set to 0 to just use '
                              'audio from the last processing. Note that this can easily lead to repetition/loops if the'
@@ -400,6 +387,20 @@ def cli():
                         default='float16',
                         help='Set the quantization type for faster-whisper. See '
                              'https://opennmt.net/CTranslate2/quantization.html for more info.')
+    parser.add_argument('--gpt_translation_prompt', type=str, default=None,
+                        help='If set, will translate the result text to target language via ChatGPT API.'
+                             'Example: \"Translate from Japanese to Chinese\"')
+    parser.add_argument('--openai_api_key', type=str, default=None,
+                        help='OpenAI API key for using ChatGPT translation.')
+    parser.add_argument('--gpt_model', type=str, default="gpt-3.5-turbo",
+                        help='GPT model name, gpt-3.5-turbo or gpt-4')
+    parser.add_argument('--gpt_translation_timeout', type=int, default=15,
+                        help='If the ChatGPT translation exceeds this number of seconds, '
+                             'the translation will be discarded.')
+    parser.add_argument('--cqhttp_url', type=str, default=None,
+                        help='If set, will send the result text to the cqhttp server.')
+    parser.add_argument('--cqhttp_token', type=str, default=None,
+                        help='Token of cqhttp, if it is not set on the server side, it does not need to fill in.')
 
     args = parser.parse_args().__dict__
     url = args.pop("URL")
