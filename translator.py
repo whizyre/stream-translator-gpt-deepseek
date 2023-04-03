@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 
 import ffmpeg
 import numpy as np
-import streamlink
 import whisper
 from whisper.audio import SAMPLE_RATE
 
@@ -58,7 +57,7 @@ class RingBuffer:
         self.cur = 0
 
 
-def open_stream(stream, direct_url, preferred_quality):
+def open_stream(stream, direct_url, format, cookies):
     if direct_url:
         try:
             process = (
@@ -71,20 +70,6 @@ def open_stream(stream, direct_url, preferred_quality):
 
         return process, None
 
-    stream_options = streamlink.streams(stream)
-    if not stream_options:
-        print("No playable streams found on this URL:", stream)
-        sys.exit(0)
-
-    option = None
-    for quality in [preferred_quality, 'audio_only', 'audio_mp4a', 'audio_opus', 'worst', 'best']:
-        if quality in stream_options:
-            option = quality
-            break
-    if option is None:
-        # Fallback
-        option = next(iter(stream_options.values()))
-
     def writer(streamlink_proc, ffmpeg_proc):
         while (not streamlink_proc.poll()) and (not ffmpeg_proc.poll()):
             try:
@@ -93,8 +78,10 @@ def open_stream(stream, direct_url, preferred_quality):
             except (BrokenPipeError, OSError):
                 pass
 
-    cmd = ['streamlink', stream, option, "-O"]
-    streamlink_process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    cmd = ['yt-dlp', stream, '-f', format, '-o', '-', '-q']
+    if cookies:
+        cmd.extend(['--cookies', cookies])
+    ytdlp_process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
     try:
         ffmpeg_process = (
@@ -105,9 +92,9 @@ def open_stream(stream, direct_url, preferred_quality):
     except ffmpeg.Error as e:
         raise RuntimeError(f"Failed to load audio: {e.stderr.decode()}") from e
 
-    thread = threading.Thread(target=writer, args=(streamlink_process, ffmpeg_process))
+    thread = threading.Thread(target=writer, args=(ytdlp_process, ffmpeg_process))
     thread.start()
-    return ffmpeg_process, streamlink_process
+    return ffmpeg_process, ytdlp_process
 
 
 def send_to_cqhttp(url, token, text):
@@ -187,24 +174,25 @@ class StreamSlicer:
 
 
 def main(url,
+         format,
+         direct_url,
+         cookies,
+         frame_duration,
+         continuous_no_speech_threshold,
+         min_audio_length,
+         max_audio_length,
+         vad_threshold,
          model,
          language,
          whisper_filters,
+         history_buffer_size,
+         faster_whisper_args,
          gpt_translation_prompt,
          openai_api_key,
          gpt_model,
          gpt_translation_timeout,
          cqhttp_url,
          cqhttp_token,
-         frame_duration,
-         continuous_no_speech_threshold,
-         min_audio_length,
-         max_audio_length,
-         vad_threshold,
-         history_buffer_size,
-         preferred_quality,
-         direct_url,
-         faster_whisper_args,
          **decode_options):
 
     n_bytes = round(frame_duration * SAMPLE_RATE * 2)  # Factor 2 comes from reading the int16 stream as bytes
@@ -229,12 +217,12 @@ def main(url,
         model = whisper.load_model(model)
 
     print("Opening stream...")
-    ffmpeg_process, streamlink_process = open_stream(url, direct_url, preferred_quality)
+    ffmpeg_process, ytdlp_process = open_stream(url, direct_url, format, cookies)
 
     def handler(signum, frame):
         ffmpeg_process.kill()
-        if streamlink_process:
-            streamlink_process.kill()
+        if ytdlp_process:
+            ytdlp_process.kill()
         sys.exit(0)
 
     signal.signal(signal.SIGINT, handler)
@@ -311,14 +299,14 @@ def main(url,
                     elif cqhttp_url:
                         send_to_cqhttp(cqhttp_url, cqhttp_token, result_text)
                 else:
-                    print('skip')
+                    print('skip...')
 
             while len(translation_que) and (
                     translation_que[0].result_text or datetime.utcnow() -
                     translation_que[0].start_time > timedelta(seconds=gpt_translation_timeout)):
                 task = translation_que.popleft()
                 if task.result_text:
-                    print(task.result_text)
+                    print('\033[1m{}\033[0m'.format(task.result_text))
                     if cqhttp_url:
                         send_to_cqhttp(
                             cqhttp_url, cqhttp_token,
@@ -331,13 +319,20 @@ def main(url,
         print("Stream ended")
     finally:
         ffmpeg_process.kill()
-        if streamlink_process:
-            streamlink_process.kill()
+        if ytdlp_process:
+            ytdlp_process.kill()
 
 
 def cli():
     parser = argparse.ArgumentParser(description="Parameters for translator.py")
     parser.add_argument('URL', type=str, help='Stream website and channel name, e.g. twitch.tv/forsen')
+    parser.add_argument('--format', type=str, default='wa*',
+                        help='Stream format code, this parameter will be passed directly to yt-dlp.')
+    parser.add_argument('--direct_url', action='store_true',
+                        help='Set this flag to pass the URL directly to ffmpeg. Otherwise, streamlink is used to '
+                             'obtain the stream URL.')
+    parser.add_argument('--cookies', type=str, default=None,
+                        help='Used to open member-only stream, this parameter will be passed directly to yt-dlp.')
     parser.add_argument('--frame_duration', type=float, default=0.1,
                         help='The unit that processes live streaming data in seconds.')
     parser.add_argument('--continuous_no_speech_threshold', type=float, default=0.8,
@@ -370,12 +365,6 @@ def cli():
                         help='Number of beams in beam search. Set to 0 to use greedy algorithm instead.')
     parser.add_argument('--best_of', type=int, default=5,
                         help='Number of candidates when sampling with non-zero temperature.')
-    parser.add_argument('--preferred_quality', type=str, default='audio_only',
-                        help='Preferred stream quality option. "best" and "worst" should always be available. Type '
-                             '"streamlink URL" in the console to see quality options for your URL.')
-    parser.add_argument('--direct_url', action='store_true',
-                        help='Set this flag to pass the URL directly to ffmpeg. Otherwise, streamlink is used to '
-                             'obtain the stream URL.')
     parser.add_argument('--use_faster_whisper', action='store_true',
                         help='Set this flag to use faster-whisper implementation instead of the original OpenAI '
                              'implementation.')
