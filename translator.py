@@ -70,10 +70,10 @@ def open_stream(stream, direct_url, format, cookies):
 
         return process, None
 
-    def writer(streamlink_proc, ffmpeg_proc):
-        while (not streamlink_proc.poll()) and (not ffmpeg_proc.poll()):
+    def writer(ytdlp_proc, ffmpeg_proc):
+        while (not ytdlp_proc.poll()) and (not ffmpeg_proc.poll()):
             try:
-                chunk = streamlink_proc.stdout.read(1024)
+                chunk = ytdlp_proc.stdout.read(1024)
                 ffmpeg_proc.stdin.write(chunk)
             except (BrokenPipeError, OSError):
                 pass
@@ -329,7 +329,7 @@ def cli():
     parser.add_argument('--format', type=str, default='wa*',
                         help='Stream format code, this parameter will be passed directly to yt-dlp.')
     parser.add_argument('--direct_url', action='store_true',
-                        help='Set this flag to pass the URL directly to ffmpeg. Otherwise, streamlink is used to '
+                        help='Set this flag to pass the URL directly to ffmpeg. Otherwise, yt-dlp is used to '
                              'obtain the stream URL.')
     parser.add_argument('--cookies', type=str, default=None,
                         help='Used to open member-only stream, this parameter will be passed directly to yt-dlp.')

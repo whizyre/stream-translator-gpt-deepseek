@@ -1,5 +1,5 @@
 # stream-translator
-Command line utility to transcribe or translate audio from livestreams in real time. Uses [streamlink](https://github.com/streamlink/streamlink) to 
+Command line utility to transcribe or translate audio from livestreams in real time. Uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) to 
 get livestream URLs from various services and OpenAI's [whisper](https://github.com/openai/whisper) for transcription/translation.
 
 This fork optimized the audio slicing logic based on [VAD](https://github.com/snakers4/silero-vad), 
@@ -24,8 +24,7 @@ Sample: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.s
 
 ```python translator.py URL --flags```
 
-By default, the URL can be of the form ```twitch.tv/forsen``` and streamlink is used to obtain the .m3u8 link which is passed to ffmpeg.
-See [streamlink plugins](https://streamlink.github.io/plugins.html) for info on all supported sites.
+By default, the URL can be of the form ```twitch.tv/forsen``` and yt-dlp is used to obtain the .m3u8 link which is passed to ffmpeg.
 
 
 |              --flags               |     Default Value     |                                                                                                                       Description                                                                                                                        |
@@ -45,7 +44,7 @@ See [streamlink plugins](https://streamlink.github.io/plugins.html) for info on 
 |      `--history_buffer_size`       |           0           | Times of previous audio/text to use for conditioning the model. Set to 0 to just use audio from the last processing. Note that this can easily lead to repetition/loops if the chosen language/model settings do not produce good results to begin with. |
 |           `--beam_size`            |           5           |                                                                           Number of beams in beam search. Set to 0 to use greedy algorithm instead (faster but less accurate).                                                                           |
 |            `--best_of`             |           5           |                                                                                              Number of candidates when sampling with non-zero temperature.                                                                                               |
-|           `--direct_url`           |                       |                                                                        Set this flag to pass the URL directly to ffmpeg. Otherwise, streamlink is used to obtain the stream URL.                                                                         |
+|           `--direct_url`           |                       |                                                                          Set this flag to pass the URL directly to ffmpeg. Otherwise, yt-dlp is used to obtain the stream URL.                                                                           |
 |       `--use_faster_whisper`       |                       |                                                                             Set this flag to use faster_whisper implementation instead of the original OpenAI implementation                                                                             |
 |   `--faster_whisper_model_path`    | whisper-large-v2-ct2/ |                                                                                        Path to a directory containing a Whisper model in the CTranslate2 format.                                                                                         |
 |     `--faster_whisper_device`      |         cuda          |                                                                                                         Set the device to run faster-whisper on.                                                                                                         |
