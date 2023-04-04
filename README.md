@@ -5,7 +5,7 @@ get livestream URLs from various services and OpenAI's [whisper](https://github.
 This fork optimized the audio slicing logic based on [VAD](https://github.com/snakers4/silero-vad), 
 and introduced OpenAI's [GPT API](https://platform.openai.com/docs/api-reference/chat/create) to support language translation beyond English.
 
-Sample: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ionic-bond/stream-translator/blob/main/stream_translator.ipynb)
+Sample: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ionic-bond/stream-translator-gpt/blob/main/stream_translator.ipynb)
 
 ## Prerequisites
 
