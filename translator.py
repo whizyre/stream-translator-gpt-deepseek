@@ -3,17 +3,18 @@ import requests
 import signal
 import sys
 import subprocess
+import tempfile
 import threading
 from collections import deque
 from datetime import datetime, timedelta
+from scipy.io.wavfile import write as write_audio
 
 import ffmpeg
 import numpy as np
-import whisper
 from whisper.audio import SAMPLE_RATE
 
 import filters
-from gpt_translation import translate_by_gpt
+from openai_api import translate_by_gpt, whisper_transcribe
 from vad import VAD
 
 
@@ -184,6 +185,7 @@ def main(url,
          vad_threshold,
          model,
          language,
+         use_whisper_api,
          whisper_filters,
          history_buffer_size,
          faster_whisper_args,
@@ -207,13 +209,15 @@ def main(url,
         sampling_rate=SAMPLE_RATE)
     translation_que = deque()
 
-    print("Loading model...")
     if faster_whisper_args:
+        print("Loading faster whisper model: {}".format(faster_whisper_args["model_path"]))
         from faster_whisper import WhisperModel
         model = WhisperModel(faster_whisper_args["model_path"],
                              device=faster_whisper_args["device"],
                              compute_type=faster_whisper_args["compute_type"])
-    else:
+    elif not use_whisper_api:
+        print("Loading whisper model: {}".format(model))
+        import whisper
         model = whisper.load_model(model)
 
     print("Opening stream...")
@@ -227,100 +231,106 @@ def main(url,
 
     signal.signal(signal.SIGINT, handler)
 
-    try:
-        while ffmpeg_process.poll() is None:
-            # Read audio from ffmpeg stream
-            in_bytes = ffmpeg_process.stdout.read(n_bytes)
-            if not in_bytes:
-                break
+    while ffmpeg_process.poll() is None:
+        # Read audio from ffmpeg stream
+        in_bytes = ffmpeg_process.stdout.read(n_bytes)
+        if not in_bytes:
+            break
 
-            audio = np.frombuffer(in_bytes, np.int16).flatten().astype(np.float32) / 32768.0
-            stream_slicer.put(audio)
+        audio = np.frombuffer(in_bytes, np.int16).flatten().astype(np.float32) / 32768.0
+        stream_slicer.put(audio)
 
-            if stream_slicer.should_slice():
-                # Decode the audio
-                sliced_audio = stream_slicer.slice()
-                history_audio_buffer.append(sliced_audio)
-                clear_buffers = False
-                if faster_whisper_args:
-                    segments, info = model.transcribe(sliced_audio,
-                                                      language=language,
-                                                      **decode_options)
+        if stream_slicer.should_slice():
+            # Decode the audio
+            sliced_audio = stream_slicer.slice()
+            history_audio_buffer.append(sliced_audio)
+            clear_buffers = False
+            if faster_whisper_args:
+                segments, info = model.transcribe(sliced_audio,
+                                                  language=language,
+                                                  **decode_options)
 
-                    decoded_language = "" if language else "(" + info.language + ")"
-                    decoded_text = ""
-                    previous_segment = ""
-                    for segment in segments:
-                        if segment.text != previous_segment:
-                            decoded_text += segment.text
-                            previous_segment = segment.text
+                decoded_language = "" if language else "(" + info.language + ")"
+                decoded_text = ""
+                previous_segment = ""
+                for segment in segments:
+                    if segment.text != previous_segment:
+                        decoded_text += segment.text
+                        previous_segment = segment.text
 
-                    new_prefix = decoded_text
+                new_prefix = decoded_text
+            
+            elif use_whisper_api:
+                with tempfile.TemporaryFile(mode='wb+', suffix='.wav') as audio_file:
+                    write_audio(audio_file, SAMPLE_RATE, sliced_audio)
+                    decoded_text = whisper_transcribe(audio_file, openai_api_key)
+                new_prefix = decoded_text
+                decoded_language = ""
 
-                else:
-                    result = model.transcribe(
-                        np.concatenate(history_audio_buffer.get_all()),
-                        prefix="".join(history_text_buffer.get_all()),
-                        language=language,
-                        without_timestamps=True,
-                        **decode_options)
+            else:
+                result = model.transcribe(
+                    np.concatenate(history_audio_buffer.get_all()),
+                    prefix="".join(history_text_buffer.get_all()),
+                    language=language,
+                    without_timestamps=True,
+                    **decode_options)
 
-                    decoded_language = "" if language else "(" + result.get(
-                        "language") + ")"
-                    decoded_text = result.get("text")
-                    new_prefix = ""
-                    for segment in result["segments"]:
-                        if segment["temperature"] < 0.5 and segment[
-                                "no_speech_prob"] < 0.6:
-                            new_prefix += segment["text"]
-                        else:
-                            # Clear history if the translation is unreliable, otherwise prompting on this leads to
-                            # repetition and getting stuck.
-                            clear_buffers = True
+                decoded_language = "" if language else "(" + result.get(
+                    "language") + ")"
+                decoded_text = result.get("text")
+                new_prefix = ""
+                for segment in result["segments"]:
+                    if segment["temperature"] < 0.5 and segment[
+                            "no_speech_prob"] < 0.6:
+                        new_prefix += segment["text"]
+                    else:
+                        # Clear history if the translation is unreliable, otherwise prompting on this leads to
+                        # repetition and getting stuck.
+                        clear_buffers = True
 
-                history_text_buffer.append(new_prefix)
+            history_text_buffer.append(new_prefix)
 
-                if clear_buffers or history_text_buffer.has_repetition():
-                    history_audio_buffer.clear()
-                    history_text_buffer.clear()
+            if clear_buffers or history_text_buffer.has_repetition():
+                history_audio_buffer.clear()
+                history_text_buffer.clear()
 
-                decoded_text = filter_text(decoded_text, whisper_filters)
-                if decoded_text.strip():
-                    result_text = "{}{}".format(decoded_language, decoded_text)
-                    print(result_text)
-                    if gpt_translation_prompt and openai_api_key:
-                        translation_task = TranslationTask(result_text)
-                        translation_que.append(translation_task)
-                        thread = threading.Thread(
-                            target=translate_by_gpt,
-                            args=(decoded_text, gpt_translation_prompt,
-                                  openai_api_key, gpt_model, translation_task))
-                        thread.start()
-                    elif cqhttp_url:
-                        send_to_cqhttp(cqhttp_url, cqhttp_token, result_text)
-                else:
-                    print('skip...')
+            decoded_text = filter_text(decoded_text, whisper_filters)
+            if decoded_text.strip():
+                result_text = "{}{}".format(decoded_language, decoded_text)
+                print(result_text)
+                if gpt_translation_prompt and openai_api_key:
+                    translation_task = TranslationTask(result_text)
+                    translation_que.append(translation_task)
+                    thread = threading.Thread(
+                        target=translate_by_gpt,
+                        args=(decoded_text, gpt_translation_prompt,
+                              openai_api_key, gpt_model, translation_task))
+                    thread.start()
+                elif cqhttp_url:
+                    send_to_cqhttp(cqhttp_url, cqhttp_token, result_text)
+            else:
+                print('skip...')
 
-            while len(translation_que) and (
-                    translation_que[0].result_text or datetime.utcnow() -
-                    translation_que[0].start_time > timedelta(seconds=gpt_translation_timeout)):
-                task = translation_que.popleft()
-                if task.result_text:
-                    print('\033[1m{}\033[0m'.format(task.result_text))
-                    if cqhttp_url:
-                        send_to_cqhttp(
-                            cqhttp_url, cqhttp_token,
-                            "{}\n{}".format(task.text, task.result_text))
-                else:
-                    print("Translation timeout: {}".format(task.text))
-                    if cqhttp_url:
-                        send_to_cqhttp(cqhttp_url, cqhttp_token, task.text)
+        while len(translation_que) and (
+                translation_que[0].result_text or datetime.utcnow() -
+                translation_que[0].start_time > timedelta(seconds=gpt_translation_timeout)):
+            task = translation_que.popleft()
+            if task.result_text:
+                print('\033[1m{}\033[0m'.format(task.result_text))
+                if cqhttp_url:
+                    send_to_cqhttp(
+                        cqhttp_url, cqhttp_token,
+                        "{}\n{}".format(task.text, task.result_text))
+            else:
+                print("Translation timeout: {}".format(task.text))
+                if cqhttp_url:
+                    send_to_cqhttp(cqhttp_url, cqhttp_token, task.text)
 
-        print("Stream ended")
-    finally:
-        ffmpeg_process.kill()
-        if ytdlp_process:
-            ytdlp_process.kill()
+    print("Stream ended")
+
+    ffmpeg_process.kill()
+    if ytdlp_process:
+        ytdlp_process.kill()
 
 
 def cli():
@@ -355,8 +365,6 @@ def cli():
     parser.add_argument('--language', type=str, default='auto',
                         help='Language spoken in the stream. Default option is to auto detect the spoken language. '
                              'See https://github.com/openai/whisper for available languages.')
-    parser.add_argument('--whisper_filters', type=str, default='emoji_filter',
-                        help='Filters apply to whisper results, separated by ",".')
     parser.add_argument('--history_buffer_size', type=int, default=0,
                         help='Times of previous audio/text to use for conditioning the model. Set to 0 to just use '
                              'audio from the last processing. Note that this can easily lead to repetition/loops if the'
@@ -376,11 +384,15 @@ def cli():
                         default='float16',
                         help='Set the quantization type for faster-whisper. See '
                              'https://opennmt.net/CTranslate2/quantization.html for more info.')
+    parser.add_argument('--use_whisper_api', action='store_true',
+                        help='Set this flag to use OpenAI Whisper API instead of the original local Whipser.')
+    parser.add_argument('--whisper_filters', type=str, default='emoji_filter',
+                        help='Filters apply to whisper results, separated by ",".')
+    parser.add_argument('--openai_api_key', type=str, default=None,
+                        help='OpenAI API key if using GPT translation / Whisper API.')
     parser.add_argument('--gpt_translation_prompt', type=str, default=None,
                         help='If set, will translate the result text to target language via ChatGPT API.'
                              'Example: \"Translate from Japanese to Chinese\"')
-    parser.add_argument('--openai_api_key', type=str, default=None,
-                        help='OpenAI API key for using ChatGPT translation.')
     parser.add_argument('--gpt_model', type=str, default="gpt-3.5-turbo",
                         help='GPT model name, gpt-3.5-turbo or gpt-4')
     parser.add_argument('--gpt_translation_timeout', type=int, default=15,
@@ -410,6 +422,14 @@ def cli():
             else:
                 print("English model cannot be used to detect non english language, please choose a non .en model")
                 sys.exit(0)
+
+    if use_faster_whisper and args['use_whisper_api']:
+        print("Cannot use Faster Whisper and Whisper API at the same time")
+        sys.exit(0)
+
+    if (args['use_whisper_api'] or args['gpt_translation_prompt']) and not args['openai_api_key']:
+        print("Please fill in the OpenAI API key when enabling GPT translation or Whisper API")
+        sys.exit(0)
 
     if args['language'] == 'auto':
         args['language'] = None

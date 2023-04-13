@@ -19,3 +19,8 @@ def translate_by_gpt(text, assistant_prompt, openai_api_key, model, translation_
         ],
     )
     translation_task.result_text = completion.choices[0].message['content']
+
+
+def whisper_transcribe(audio_file, openai_api_key):
+    openai.api_key = openai_api_key
+    return openai.Audio.transcribe("whisper-1", audio_file).get('text', '')
