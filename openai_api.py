@@ -13,9 +13,18 @@ def translate_by_gpt(text, assistant_prompt, openai_api_key, model, translation_
         frequency_penalty=1,
         presence_penalty=1,
         messages=[
-            {"role": "system", "content": system_prompt },
-            {"role": "user", "content": assistant_prompt },
-            {"role": "user", "content": text },
+            {
+                "role": "system",
+                "content": system_prompt
+            },
+            {
+                "role": "user",
+                "content": assistant_prompt
+            },
+            {
+                "role": "user",
+                "content": text
+            },
         ],
     )
     translation_task.result_text = completion.choices[0].message['content']

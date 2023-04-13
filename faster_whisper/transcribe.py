@@ -12,35 +12,33 @@ class Segment(collections.namedtuple("Segment", ("start", "end", "text"))):
     pass
 
 
-class AudioInfo(
-    collections.namedtuple("AudioInfo", ("language", "language_probability"))
-):
+class AudioInfo(collections.namedtuple("AudioInfo", ("language", "language_probability"))):
     pass
 
 
 class TranscriptionOptions(
-    collections.namedtuple(
-        "TranscriptionOptions",
-        (
-            "task",
-            "beam_size",
-            "best_of",
-            "patience",
-            "length_penalty",
-            "log_prob_threshold",
-            "no_speech_threshold",
-            "compression_ratio_threshold",
-            "condition_on_previous_text",
-            "temperatures",
-            "initial_prompt",
-            "without_timestamps",
-        ),
-    )
-):
+        collections.namedtuple(
+            "TranscriptionOptions",
+            (
+                "task",
+                "beam_size",
+                "best_of",
+                "patience",
+                "length_penalty",
+                "log_prob_threshold",
+                "no_speech_threshold",
+                "compression_ratio_threshold",
+                "condition_on_previous_text",
+                "temperatures",
+                "initial_prompt",
+                "without_timestamps",
+            ),
+        )):
     pass
 
 
 class WhisperModel:
+
     def __init__(
         self,
         model_path,
@@ -79,8 +77,7 @@ class WhisperModel:
 
         self.feature_extractor = FeatureExtractor()
         self.tokenizer = tokenizers.Tokenizer.from_pretrained(
-            "openai/whisper-tiny" + ("" if self.model.is_multilingual else ".en")
-        )
+            "openai/whisper-tiny" + ("" if self.model.is_multilingual else ".en"))
         self.eot_id = self.tokenizer.token_to_id("<|endoftext|>")
         self.timestamp_begin_id = self.tokenizer.token_to_id("<|notimestamps|>") + 1
         self.input_stride = 2
@@ -139,12 +136,10 @@ class WhisperModel:
 
             - a generator over transcribed segments
             - an instance of AudioInfo
-        """    
+        """
         if isinstance(audio, str):
             from faster_whisper.audio import decode_audio
-            audio = decode_audio(
-                input_file, sampling_rate=self.feature_extractor.sampling_rate
-            )
+            audio = decode_audio(input_file, sampling_rate=self.feature_extractor.sampling_rate)
         features = self.feature_extractor(audio)
 
         if language is None:
@@ -172,9 +167,7 @@ class WhisperModel:
             no_speech_threshold=no_speech_threshold,
             compression_ratio_threshold=compression_ratio_threshold,
             condition_on_previous_text=condition_on_previous_text,
-            temperatures=(
-                temperature if isinstance(temperature, (list, tuple)) else [temperature]
-            ),
+            temperatures=(temperature if isinstance(temperature, (list, tuple)) else [temperature]),
             initial_prompt=initial_prompt,
             without_timestamps=without_timestamps,
         )
@@ -189,9 +182,7 @@ class WhisperModel:
         return segments, audio_info
 
     def generate_segments(self, features, language, options):
-        tokenized_segments = self.generate_tokenized_segments(
-            features, language, options
-        )
+        tokenized_segments = self.generate_tokenized_segments(features, language, options)
 
         for start, end, tokens in tokenized_segments:
             text = self.decode_text_tokens(tokens)
@@ -212,9 +203,7 @@ class WhisperModel:
 
         if options.initial_prompt is not None:
             initial_prompt = " " + options.initial_prompt.strip()
-            initial_prompt_tokens = self.tokenizer.encode(
-                initial_prompt, add_special_tokens=False
-            )
+            initial_prompt_tokens = self.tokenizer.encode(initial_prompt, add_special_tokens=False)
             all_tokens.extend(initial_prompt_tokens.ids)
 
         while offset < num_frames:
@@ -231,40 +220,28 @@ class WhisperModel:
             )
 
             result, avg_log_prob, temperature = self.generate_with_fallback(
-                segment, prompt, options
-            )
+                segment, prompt, options)
 
-            if (
-                result.no_speech_prob > options.no_speech_threshold
-                and avg_log_prob < options.log_prob_threshold
-            ):
+            if (result.no_speech_prob > options.no_speech_threshold and
+                    avg_log_prob < options.log_prob_threshold):
                 offset += segment.shape[-1]
                 continue
 
             tokens = result.sequences_ids[0]
 
             consecutive_timestamps = [
-                i
-                for i in range(len(tokens))
-                if i > 0
-                and tokens[i] >= self.timestamp_begin_id
-                and tokens[i - 1] >= self.timestamp_begin_id
+                i for i in range(len(tokens)) if i > 0 and tokens[i] >= self.timestamp_begin_id and
+                tokens[i - 1] >= self.timestamp_begin_id
             ]
 
             if len(consecutive_timestamps) > 0:
                 last_slice = 0
                 for i, current_slice in enumerate(consecutive_timestamps):
                     sliced_tokens = tokens[last_slice:current_slice]
-                    start_timestamp_position = (
-                        sliced_tokens[0] - self.timestamp_begin_id
-                    )
+                    start_timestamp_position = (sliced_tokens[0] - self.timestamp_begin_id)
                     end_timestamp_position = sliced_tokens[-1] - self.timestamp_begin_id
-                    start_time = (
-                        time_offset + start_timestamp_position * self.time_precision
-                    )
-                    end_time = (
-                        time_offset + end_timestamp_position * self.time_precision
-                    )
+                    start_time = (time_offset + start_timestamp_position * self.time_precision)
+                    end_time = (time_offset + end_timestamp_position * self.time_precision)
 
                     last_in_window = i + 1 == len(consecutive_timestamps)
 
@@ -275,17 +252,13 @@ class WhisperModel:
                     yield start_time, end_time, sliced_tokens
                     last_slice = current_slice
 
-                last_timestamp_position = (
-                    tokens[last_slice - 1] - self.timestamp_begin_id
-                )
+                last_timestamp_position = (tokens[last_slice - 1] - self.timestamp_begin_id)
                 offset += last_timestamp_position * self.input_stride
-                all_tokens.extend(tokens[: last_slice + 1])
+                all_tokens.extend(tokens[:last_slice + 1])
 
             else:
                 duration = segment_duration
-                timestamps = [
-                    token for token in tokens if token >= self.timestamp_begin_id
-                ]
+                timestamps = [token for token in tokens if token >= self.timestamp_begin_id]
                 if len(timestamps) > 0 and timestamps[-1] != self.timestamp_begin_id:
                     last_timestamp_position = timestamps[-1] - self.timestamp_begin_id
                     duration = last_timestamp_position * self.time_precision
@@ -343,10 +316,8 @@ class WhisperModel:
             text = self.decode_text_tokens(tokens).strip()
             compression_ratio = get_compression_ratio(text)
 
-            if (
-                compression_ratio <= options.compression_ratio_threshold
-                and avg_log_prob >= options.log_prob_threshold
-            ):
+            if (compression_ratio <= options.compression_ratio_threshold and
+                    avg_log_prob >= options.log_prob_threshold):
                 break
 
         return result, avg_log_prob, final_temperature
@@ -362,17 +333,15 @@ class WhisperModel:
 
         if previous_tokens:
             prompt.append(self.tokenizer.token_to_id("<|startofprev|>"))
-            prompt.extend(previous_tokens[-(self.max_length // 2 - 1) :])
+            prompt.extend(previous_tokens[-(self.max_length // 2 - 1):])
 
         prompt.append(self.tokenizer.token_to_id("<|startoftranscript|>"))
 
         if self.model.is_multilingual:
-            prompt.extend(
-                [
-                    self.tokenizer.token_to_id("<|%s|>" % language),
-                    self.tokenizer.token_to_id("<|%s|>" % task),
-                ]
-            )
+            prompt.extend([
+                self.tokenizer.token_to_id("<|%s|>" % language),
+                self.tokenizer.token_to_id("<|%s|>" % task),
+            ])
 
         if without_timestamps:
             prompt.append(self.tokenizer.token_to_id("<|notimestamps|>"))

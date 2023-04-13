@@ -19,6 +19,7 @@ from vad import VAD
 
 
 class RingBuffer:
+
     def __init__(self, size):
         self.size = size
         self.data = []
@@ -61,11 +62,12 @@ class RingBuffer:
 def open_stream(stream, direct_url, format, cookies):
     if direct_url:
         try:
-            process = (
-                ffmpeg.input(stream, loglevel="panic")
-                .output("pipe:", format="s16le", acodec="pcm_s16le", ac=1, ar=SAMPLE_RATE)
-                .run_async(pipe_stdout=True)
-            )
+            process = (ffmpeg.input(
+                stream, loglevel="panic").output("pipe:",
+                                                 format="s16le",
+                                                 acodec="pcm_s16le",
+                                                 ac=1,
+                                                 ar=SAMPLE_RATE).run_async(pipe_stdout=True))
         except ffmpeg.Error as e:
             raise RuntimeError(f"Failed to load audio: {e.stderr.decode()}") from e
 
@@ -85,11 +87,13 @@ def open_stream(stream, direct_url, format, cookies):
     ytdlp_process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
     try:
-        ffmpeg_process = (
-            ffmpeg.input("pipe:", loglevel="panic")
-            .output("pipe:", format="s16le", acodec="pcm_s16le", ac=1, ar=SAMPLE_RATE)
-            .run_async(pipe_stdin=True, pipe_stdout=True)
-        )
+        ffmpeg_process = (ffmpeg.input("pipe:", loglevel="panic").output("pipe:",
+                                                                         format="s16le",
+                                                                         acodec="pcm_s16le",
+                                                                         ac=1,
+                                                                         ar=SAMPLE_RATE).run_async(
+                                                                             pipe_stdin=True,
+                                                                             pipe_stdout=True))
     except ffmpeg.Error as e:
         raise RuntimeError(f"Failed to load audio: {e.stderr.decode()}") from e
 
@@ -115,6 +119,7 @@ def filter_text(text, whisper_filters):
 
 
 class TranslationTask:
+
     def __init__(self, text):
         self.text = text
         self.result_text = None
@@ -126,8 +131,7 @@ class StreamSlicer:
     def __init__(self, frame_duration, continuous_no_speech_threshold, min_audio_length,
                  max_audio_length, vad_threshold, sampling_rate):
         self.vad = VAD()
-        self.continuous_no_speech_threshold = round(
-            continuous_no_speech_threshold / frame_duration)
+        self.continuous_no_speech_threshold = round(continuous_no_speech_threshold / frame_duration)
         self.min_audio_length = round(min_audio_length / frame_duration)
         self.max_audio_length = round(max_audio_length / frame_duration)
         self.vad_threshold = vad_threshold
@@ -174,39 +178,22 @@ class StreamSlicer:
         return concatenate_audio
 
 
-def main(url,
-         format,
-         direct_url,
-         cookies,
-         frame_duration,
-         continuous_no_speech_threshold,
-         min_audio_length,
-         max_audio_length,
-         vad_threshold,
-         model,
-         language,
-         use_whisper_api,
-         whisper_filters,
-         history_buffer_size,
-         faster_whisper_args,
-         gpt_translation_prompt,
-         openai_api_key,
-         gpt_model,
-         gpt_translation_timeout,
-         cqhttp_url,
-         cqhttp_token,
+def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_threshold,
+         min_audio_length, max_audio_length, vad_threshold, model, language, use_whisper_api,
+         whisper_filters, history_buffer_size, faster_whisper_args, gpt_translation_prompt,
+         openai_api_key, gpt_model, gpt_translation_timeout, cqhttp_url, cqhttp_token,
          **decode_options):
 
-    n_bytes = round(frame_duration * SAMPLE_RATE * 2)  # Factor 2 comes from reading the int16 stream as bytes
+    n_bytes = round(frame_duration * SAMPLE_RATE *
+                    2)  # Factor 2 comes from reading the int16 stream as bytes
     history_audio_buffer = RingBuffer(history_buffer_size + 1)
     history_text_buffer = RingBuffer(history_buffer_size)
-    stream_slicer = StreamSlicer(
-        frame_duration=frame_duration,
-        continuous_no_speech_threshold=continuous_no_speech_threshold,
-        min_audio_length=min_audio_length,
-        max_audio_length=max_audio_length,
-        vad_threshold=vad_threshold,
-        sampling_rate=SAMPLE_RATE)
+    stream_slicer = StreamSlicer(frame_duration=frame_duration,
+                                 continuous_no_speech_threshold=continuous_no_speech_threshold,
+                                 min_audio_length=min_audio_length,
+                                 max_audio_length=max_audio_length,
+                                 vad_threshold=vad_threshold,
+                                 sampling_rate=SAMPLE_RATE)
     translation_que = deque()
 
     if faster_whisper_args:
@@ -246,9 +233,7 @@ def main(url,
             history_audio_buffer.append(sliced_audio)
             clear_buffers = False
             if faster_whisper_args:
-                segments, info = model.transcribe(sliced_audio,
-                                                  language=language,
-                                                  **decode_options)
+                segments, info = model.transcribe(sliced_audio, language=language, **decode_options)
 
                 decoded_language = "" if language else "(" + info.language + ")"
                 decoded_text = ""
@@ -259,7 +244,7 @@ def main(url,
                         previous_segment = segment.text
 
                 new_prefix = decoded_text
-            
+
             elif use_whisper_api:
                 with tempfile.TemporaryFile(mode='wb+', suffix='.wav') as audio_file:
                     write_audio(audio_file, SAMPLE_RATE, sliced_audio)
@@ -268,20 +253,17 @@ def main(url,
                 decoded_language = ""
 
             else:
-                result = model.transcribe(
-                    np.concatenate(history_audio_buffer.get_all()),
-                    prefix="".join(history_text_buffer.get_all()),
-                    language=language,
-                    without_timestamps=True,
-                    **decode_options)
+                result = model.transcribe(np.concatenate(history_audio_buffer.get_all()),
+                                          prefix="".join(history_text_buffer.get_all()),
+                                          language=language,
+                                          without_timestamps=True,
+                                          **decode_options)
 
-                decoded_language = "" if language else "(" + result.get(
-                    "language") + ")"
+                decoded_language = "" if language else "(" + result.get("language") + ")"
                 decoded_text = result.get("text")
                 new_prefix = ""
                 for segment in result["segments"]:
-                    if segment["temperature"] < 0.5 and segment[
-                            "no_speech_prob"] < 0.6:
+                    if segment["temperature"] < 0.5 and segment["no_speech_prob"] < 0.6:
                         new_prefix += segment["text"]
                     else:
                         # Clear history if the translation is unreliable, otherwise prompting on this leads to
@@ -301,26 +283,24 @@ def main(url,
                 if gpt_translation_prompt and openai_api_key:
                     translation_task = TranslationTask(result_text)
                     translation_que.append(translation_task)
-                    thread = threading.Thread(
-                        target=translate_by_gpt,
-                        args=(decoded_text, gpt_translation_prompt,
-                              openai_api_key, gpt_model, translation_task))
+                    thread = threading.Thread(target=translate_by_gpt,
+                                              args=(decoded_text, gpt_translation_prompt,
+                                                    openai_api_key, gpt_model, translation_task))
                     thread.start()
                 elif cqhttp_url:
                     send_to_cqhttp(cqhttp_url, cqhttp_token, result_text)
             else:
                 print('skip...')
 
-        while len(translation_que) and (
-                translation_que[0].result_text or datetime.utcnow() -
-                translation_que[0].start_time > timedelta(seconds=gpt_translation_timeout)):
+        while len(translation_que) and (translation_que[0].result_text or
+                                        datetime.utcnow() - translation_que[0].start_time >
+                                        timedelta(seconds=gpt_translation_timeout)):
             task = translation_que.popleft()
             if task.result_text:
                 print('\033[1m{}\033[0m'.format(task.result_text))
                 if cqhttp_url:
-                    send_to_cqhttp(
-                        cqhttp_url, cqhttp_token,
-                        "{}\n{}".format(task.text, task.result_text))
+                    send_to_cqhttp(cqhttp_url, cqhttp_token,
+                                   "{}\n{}".format(task.text, task.result_text))
             else:
                 print("Translation timeout: {}".format(task.text))
                 if cqhttp_url:
@@ -335,73 +315,140 @@ def main(url,
 
 def cli():
     parser = argparse.ArgumentParser(description="Parameters for translator.py")
-    parser.add_argument('URL', type=str, help='Stream website and channel name, e.g. twitch.tv/forsen')
-    parser.add_argument('--format', type=str, default='wa*',
-                        help='Stream format code, this parameter will be passed directly to yt-dlp.')
-    parser.add_argument('--direct_url', action='store_true',
-                        help='Set this flag to pass the URL directly to ffmpeg. Otherwise, yt-dlp is used to '
-                             'obtain the stream URL.')
-    parser.add_argument('--cookies', type=str, default=None,
-                        help='Used to open member-only stream, this parameter will be passed directly to yt-dlp.')
-    parser.add_argument('--frame_duration', type=float, default=0.1,
+    parser.add_argument('URL',
+                        type=str,
+                        help='Stream website and channel name, e.g. twitch.tv/forsen')
+    parser.add_argument(
+        '--format',
+        type=str,
+        default='wa*',
+        help='Stream format code, this parameter will be passed directly to yt-dlp.')
+    parser.add_argument(
+        '--direct_url',
+        action='store_true',
+        help='Set this flag to pass the URL directly to ffmpeg. Otherwise, yt-dlp is used to '
+        'obtain the stream URL.')
+    parser.add_argument(
+        '--cookies',
+        type=str,
+        default=None,
+        help='Used to open member-only stream, this parameter will be passed directly to yt-dlp.')
+    parser.add_argument('--frame_duration',
+                        type=float,
+                        default=0.1,
                         help='The unit that processes live streaming data in seconds.')
-    parser.add_argument('--continuous_no_speech_threshold', type=float, default=0.8,
+    parser.add_argument('--continuous_no_speech_threshold',
+                        type=float,
+                        default=0.8,
                         help='Slice if there is no speech for a continuous period in second.')
-    parser.add_argument('--min_audio_length', type=float, default=3.0,
+    parser.add_argument('--min_audio_length',
+                        type=float,
+                        default=3.0,
                         help='Minimum slice audio length in seconds.')
-    parser.add_argument('--max_audio_length', type=float, default=30.0,
+    parser.add_argument('--max_audio_length',
+                        type=float,
+                        default=30.0,
                         help='Maximum slice audio length in seconds.')
-    parser.add_argument('--vad_threshold', type=float, default=0.5,
-                        help='The threshold of Voice activity detection.'
-                             'if the speech probability of a frame is higher than this value, then this frame is speech.')
-    parser.add_argument('--model', type=str,
-                        choices=['tiny', 'tiny.en', 'small', 'small.en', 'medium', 'medium.en', 'large'],
-                        default='small',
-                        help='Model to be used for generating audio transcription. Smaller models are faster and use '
-                             'less VRAM, but are also less accurate. .en models are more accurate but only work on '
-                             'English audio.')
-    parser.add_argument('--task', type=str, choices=['transcribe', 'translate'], default='transcribe',
-                        help='Whether to transcribe the audio (keep original language) or translate to English.')
-    parser.add_argument('--language', type=str, default='auto',
-                        help='Language spoken in the stream. Default option is to auto detect the spoken language. '
-                             'See https://github.com/openai/whisper for available languages.')
-    parser.add_argument('--history_buffer_size', type=int, default=0,
-                        help='Times of previous audio/text to use for conditioning the model. Set to 0 to just use '
-                             'audio from the last processing. Note that this can easily lead to repetition/loops if the'
-                             'chosen language/model settings do not produce good results to begin with.')
-    parser.add_argument('--beam_size', type=int, default=5,
-                        help='Number of beams in beam search. Set to 0 to use greedy algorithm instead.')
-    parser.add_argument('--best_of', type=int, default=5,
+    parser.add_argument(
+        '--vad_threshold',
+        type=float,
+        default=0.5,
+        help='The threshold of Voice activity detection.'
+        'if the speech probability of a frame is higher than this value, then this frame is speech.'
+    )
+    parser.add_argument(
+        '--model',
+        type=str,
+        choices=['tiny', 'tiny.en', 'small', 'small.en', 'medium', 'medium.en', 'large'],
+        default='small',
+        help='Model to be used for generating audio transcription. Smaller models are faster and use '
+        'less VRAM, but are also less accurate. .en models are more accurate but only work on '
+        'English audio.')
+    parser.add_argument(
+        '--task',
+        type=str,
+        choices=['transcribe', 'translate'],
+        default='transcribe',
+        help='Whether to transcribe the audio (keep original language) or translate to English.')
+    parser.add_argument(
+        '--language',
+        type=str,
+        default='auto',
+        help='Language spoken in the stream. Default option is to auto detect the spoken language. '
+        'See https://github.com/openai/whisper for available languages.')
+    parser.add_argument(
+        '--history_buffer_size',
+        type=int,
+        default=0,
+        help='Times of previous audio/text to use for conditioning the model. Set to 0 to just use '
+        'audio from the last processing. Note that this can easily lead to repetition/loops if the'
+        'chosen language/model settings do not produce good results to begin with.')
+    parser.add_argument(
+        '--beam_size',
+        type=int,
+        default=5,
+        help='Number of beams in beam search. Set to 0 to use greedy algorithm instead.')
+    parser.add_argument('--best_of',
+                        type=int,
+                        default=5,
                         help='Number of candidates when sampling with non-zero temperature.')
-    parser.add_argument('--use_faster_whisper', action='store_true',
-                        help='Set this flag to use faster-whisper implementation instead of the original OpenAI '
-                             'implementation.')
-    parser.add_argument('--faster_whisper_model_path', type=str, default='whisper-large-v2-ct2/',
-                        help='Path to a directory containing a Whisper model in the CTranslate2 format.')
-    parser.add_argument('--faster_whisper_device', type=str, choices=['cuda', 'cpu', 'auto'], default='cuda',
+    parser.add_argument(
+        '--use_faster_whisper',
+        action='store_true',
+        help='Set this flag to use faster-whisper implementation instead of the original OpenAI '
+        'implementation.')
+    parser.add_argument(
+        '--faster_whisper_model_path',
+        type=str,
+        default='whisper-large-v2-ct2/',
+        help='Path to a directory containing a Whisper model in the CTranslate2 format.')
+    parser.add_argument('--faster_whisper_device',
+                        type=str,
+                        choices=['cuda', 'cpu', 'auto'],
+                        default='cuda',
                         help='Set the device to run faster-whisper on.')
-    parser.add_argument('--faster_whisper_compute_type', type=str, choices=['int8', 'int8_float16', 'int16', 'float16'],
+    parser.add_argument('--faster_whisper_compute_type',
+                        type=str,
+                        choices=['int8', 'int8_float16', 'int16', 'float16'],
                         default='float16',
                         help='Set the quantization type for faster-whisper. See '
-                             'https://opennmt.net/CTranslate2/quantization.html for more info.')
-    parser.add_argument('--use_whisper_api', action='store_true',
-                        help='Set this flag to use OpenAI Whisper API instead of the original local Whipser.')
-    parser.add_argument('--whisper_filters', type=str, default='emoji_filter',
+                        'https://opennmt.net/CTranslate2/quantization.html for more info.')
+    parser.add_argument(
+        '--use_whisper_api',
+        action='store_true',
+        help='Set this flag to use OpenAI Whisper API instead of the original local Whipser.')
+    parser.add_argument('--whisper_filters',
+                        type=str,
+                        default='emoji_filter',
                         help='Filters apply to whisper results, separated by ",".')
-    parser.add_argument('--openai_api_key', type=str, default=None,
+    parser.add_argument('--openai_api_key',
+                        type=str,
+                        default=None,
                         help='OpenAI API key if using GPT translation / Whisper API.')
-    parser.add_argument('--gpt_translation_prompt', type=str, default=None,
-                        help='If set, will translate the result text to target language via ChatGPT API.'
-                             'Example: \"Translate from Japanese to Chinese\"')
-    parser.add_argument('--gpt_model', type=str, default="gpt-3.5-turbo",
+    parser.add_argument(
+        '--gpt_translation_prompt',
+        type=str,
+        default=None,
+        help='If set, will translate the result text to target language via ChatGPT API.'
+        'Example: \"Translate from Japanese to Chinese\"')
+    parser.add_argument('--gpt_model',
+                        type=str,
+                        default="gpt-3.5-turbo",
                         help='GPT model name, gpt-3.5-turbo or gpt-4')
-    parser.add_argument('--gpt_translation_timeout', type=int, default=15,
+    parser.add_argument('--gpt_translation_timeout',
+                        type=int,
+                        default=15,
                         help='If the ChatGPT translation exceeds this number of seconds, '
-                             'the translation will be discarded.')
-    parser.add_argument('--cqhttp_url', type=str, default=None,
+                        'the translation will be discarded.')
+    parser.add_argument('--cqhttp_url',
+                        type=str,
+                        default=None,
                         help='If set, will send the result text to the cqhttp server.')
-    parser.add_argument('--cqhttp_token', type=str, default=None,
-                        help='Token of cqhttp, if it is not set on the server side, it does not need to fill in.')
+    parser.add_argument(
+        '--cqhttp_token',
+        type=str,
+        default=None,
+        help='Token of cqhttp, if it is not set on the server side, it does not need to fill in.')
 
     args = parser.parse_args().__dict__
     url = args.pop("URL")
@@ -413,14 +460,18 @@ def cli():
 
     if args['model'].endswith('.en'):
         if args['model'] == 'large.en':
-            print("English model does not have large model, please choose from {tiny.en, small.en, medium.en}")
+            print(
+                "English model does not have large model, please choose from {tiny.en, small.en, medium.en}"
+            )
             sys.exit(0)
         if args['language'] != 'English' and args['language'] != 'en':
             if args['language'] == 'auto':
                 print("Using .en model, setting language from auto to English")
                 args['language'] = 'en'
             else:
-                print("English model cannot be used to detect non english language, please choose a non .en model")
+                print(
+                    "English model cannot be used to detect non english language, please choose a non .en model"
+                )
                 sys.exit(0)
 
     if use_faster_whisper and args['use_whisper_api']:

@@ -3,6 +3,7 @@ import numpy as np
 
 # Adapted from https://github.com/huggingface/transformers/blob/main/src/transformers/models/whisper/feature_extraction_whisper.py
 class FeatureExtractor:
+
     def __init__(
         self,
         feature_size=80,
@@ -18,9 +19,7 @@ class FeatureExtractor:
         self.nb_max_frames = self.n_samples // hop_length
         self.time_per_frame = hop_length / sampling_rate
         self.sampling_rate = sampling_rate
-        self.mel_filters = self.get_mel_filters(
-            sampling_rate, n_fft, n_mels=feature_size
-        )
+        self.mel_filters = self.get_mel_filters(sampling_rate, n_fft, n_mels=feature_size)
 
     def get_mel_filters(self, sr, n_fft, n_mels=128, dtype=np.float32):
         # Initialize the weights
@@ -66,7 +65,7 @@ class FeatureExtractor:
             weights[i] = np.maximum(0, np.minimum(lower, upper))
 
         # Slaney-style mel is scaled to be approx constant energy per channel
-        enorm = 2.0 / (mel_f[2 : n_mels + 2] - mel_f[:n_mels])
+        enorm = 2.0 / (mel_f[2:n_mels + 2] - mel_f[:n_mels])
         weights *= enorm[:, np.newaxis]
 
         return weights
@@ -85,11 +84,8 @@ class FeatureExtractor:
             half_window = (self.n_fft - 1) // 2 + 1
             if center:
                 start = i - half_window if i > half_window else 0
-                end = (
-                    i + half_window
-                    if i < waveform.shape[0] - half_window
-                    else waveform.shape[0]
-                )
+                end = (i +
+                       half_window if i < waveform.shape[0] - half_window else waveform.shape[0])
 
                 frame = waveform[start:end]
 
@@ -102,7 +98,7 @@ class FeatureExtractor:
                     frame = np.pad(frame, pad_width=padd_width, mode="reflect")
 
             else:
-                frame = waveform[i : i + self.n_fft]
+                frame = waveform[i:i + self.n_fft]
                 frame_width = frame.shape[0]
                 if frame_width < waveform.shape[0]:
                     frame = np.lib.pad(
@@ -151,7 +147,7 @@ class FeatureExtractor:
 
         frames = self.fram_wave(waveform)
         stft = self.stft(frames, window=window)
-        magnitudes = np.abs(stft[:, :-1]) ** 2
+        magnitudes = np.abs(stft[:, :-1])**2
 
         filters = self.mel_filters
         mel_spec = filters @ magnitudes
