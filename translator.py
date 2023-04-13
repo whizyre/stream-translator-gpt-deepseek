@@ -1,4 +1,5 @@
 import argparse
+import os
 import requests
 import signal
 import sys
@@ -246,7 +247,7 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
                 new_prefix = decoded_text
 
             elif use_whisper_api:
-                with tempfile.TemporaryFile(mode='wb+', suffix='.wav') as audio_file:
+                with tempfile.NamedTemporaryFile(mode='wb+', suffix='.wav') as audio_file:
                     write_audio(audio_file, SAMPLE_RATE, sliced_audio)
                     decoded_text = whisper_transcribe(audio_file, openai_api_key)
                 new_prefix = decoded_text
@@ -487,6 +488,10 @@ def cli():
 
     if args['beam_size'] == 0:
         args['beam_size'] = None
+
+    # Remove yt-dlp cache
+    if os.path.exists('--Frag1'):
+        os.remove('--Frag1')
 
     main(url, faster_whisper_args=faster_whisper_args if use_faster_whisper else None, **args)
 
