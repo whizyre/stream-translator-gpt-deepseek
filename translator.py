@@ -323,17 +323,19 @@ def cli():
         '--format',
         type=str,
         default='wa*',
-        help='Stream format code, this parameter will be passed directly to yt-dlp.')
+        help='Stream format code, '
+        'this parameter will be passed directly to yt-dlp.')
     parser.add_argument(
         '--direct_url',
         action='store_true',
-        help='Set this flag to pass the URL directly to ffmpeg. Otherwise, yt-dlp is used to '
-        'obtain the stream URL.')
+        help='Set this flag to pass the URL directly to ffmpeg. '
+        'Otherwise, yt-dlp is used to obtain the stream URL.')
     parser.add_argument(
         '--cookies',
         type=str,
         default=None,
-        help='Used to open member-only stream, this parameter will be passed directly to yt-dlp.')
+        help='Used to open member-only stream, '
+        'this parameter will be passed directly to yt-dlp.')
     parser.add_argument('--frame_duration',
                         type=float,
                         default=0.1,
@@ -355,16 +357,18 @@ def cli():
         type=float,
         default=0.5,
         help='The threshold of Voice activity detection.'
-        'if the speech probability of a frame is higher than this value, then this frame is speech.'
+        'if the speech probability of a frame is higher than this value, '
+        'then this frame is speech.'
     )
     parser.add_argument(
         '--model',
         type=str,
         choices=['tiny', 'tiny.en', 'small', 'small.en', 'medium', 'medium.en', 'large'],
         default='small',
-        help='Model to be used for generating audio transcription. Smaller models are faster and use '
-        'less VRAM, but are also less accurate. .en models are more accurate but only work on '
-        'English audio.')
+        help='Model to be used for generating audio transcription. '
+        'Smaller models are faster and use less VRAM, '
+        'but are also less accurate. .en models are more accurate '
+        'but only work on English audio.')
     parser.add_argument(
         '--task',
         type=str,
@@ -375,20 +379,23 @@ def cli():
         '--language',
         type=str,
         default='auto',
-        help='Language spoken in the stream. Default option is to auto detect the spoken language. '
+        help='Language spoken in the stream. '
+        'Default option is to auto detect the spoken language. '
         'See https://github.com/openai/whisper for available languages.')
     parser.add_argument(
         '--history_buffer_size',
         type=int,
         default=0,
-        help='Times of previous audio/text to use for conditioning the model. Set to 0 to just use '
-        'audio from the last processing. Note that this can easily lead to repetition/loops if the'
-        'chosen language/model settings do not produce good results to begin with.')
+        help='Times of previous audio/text to use for conditioning the model. '
+        'Set to 0 to just use audio from the last processing. '
+        'Note that this can easily lead to repetition/loops if the chosen '
+        'language/model settings do not produce good results to begin with.')
     parser.add_argument(
         '--beam_size',
         type=int,
         default=5,
-        help='Number of beams in beam search. Set to 0 to use greedy algorithm instead.')
+        help='Number of beams in beam search. '
+        'Set to 0 to use greedy algorithm instead.')
     parser.add_argument('--best_of',
                         type=int,
                         default=5,
@@ -396,13 +403,14 @@ def cli():
     parser.add_argument(
         '--use_faster_whisper',
         action='store_true',
-        help='Set this flag to use faster-whisper implementation instead of the original OpenAI '
-        'implementation.')
+        help='Set this flag to use faster-whisper implementation instead of '
+        'the original OpenAI implementation.')
     parser.add_argument(
         '--faster_whisper_model_path',
         type=str,
         default='whisper-large-v2-ct2/',
-        help='Path to a directory containing a Whisper model in the CTranslate2 format.')
+        help='Path to a directory containing a Whisper model '
+        'in the CTranslate2 format.')
     parser.add_argument('--faster_whisper_device',
                         type=str,
                         choices=['cuda', 'cpu', 'auto'],
@@ -417,7 +425,8 @@ def cli():
     parser.add_argument(
         '--use_whisper_api',
         action='store_true',
-        help='Set this flag to use OpenAI Whisper API instead of the original local Whipser.')
+        help='Set this flag to use OpenAI Whisper API instead of '
+        'the original local Whipser.')
     parser.add_argument('--whisper_filters',
                         type=str,
                         default='emoji_filter',
@@ -430,7 +439,7 @@ def cli():
         '--gpt_translation_prompt',
         type=str,
         default=None,
-        help='If set, will translate the result text to target language via ChatGPT API.'
+        help='If set, will translate result text to target language via GPT API. '
         'Example: \"Translate from Japanese to Chinese\"')
     parser.add_argument('--gpt_model',
                         type=str,
@@ -449,7 +458,8 @@ def cli():
         '--cqhttp_token',
         type=str,
         default=None,
-        help='Token of cqhttp, if it is not set on the server side, it does not need to fill in.')
+        help='Token of cqhttp, if it is not set on the server side, '
+        'it does not need to fill in.')
 
     args = parser.parse_args().__dict__
     url = args.pop("URL")
