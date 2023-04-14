@@ -319,23 +319,20 @@ def cli():
     parser.add_argument('URL',
                         type=str,
                         help='Stream website and channel name, e.g. twitch.tv/forsen')
-    parser.add_argument(
-        '--format',
-        type=str,
-        default='wa*',
-        help='Stream format code, '
-        'this parameter will be passed directly to yt-dlp.')
-    parser.add_argument(
-        '--direct_url',
-        action='store_true',
-        help='Set this flag to pass the URL directly to ffmpeg. '
-        'Otherwise, yt-dlp is used to obtain the stream URL.')
-    parser.add_argument(
-        '--cookies',
-        type=str,
-        default=None,
-        help='Used to open member-only stream, '
-        'this parameter will be passed directly to yt-dlp.')
+    parser.add_argument('--format',
+                        type=str,
+                        default='wa*',
+                        help='Stream format code, '
+                        'this parameter will be passed directly to yt-dlp.')
+    parser.add_argument('--direct_url',
+                        action='store_true',
+                        help='Set this flag to pass the URL directly to ffmpeg. '
+                        'Otherwise, yt-dlp is used to obtain the stream URL.')
+    parser.add_argument('--cookies',
+                        type=str,
+                        default=None,
+                        help='Used to open member-only stream, '
+                        'this parameter will be passed directly to yt-dlp.')
     parser.add_argument('--frame_duration',
                         type=float,
                         default=0.1,
@@ -352,14 +349,12 @@ def cli():
                         type=float,
                         default=30.0,
                         help='Maximum slice audio length in seconds.')
-    parser.add_argument(
-        '--vad_threshold',
-        type=float,
-        default=0.5,
-        help='The threshold of Voice activity detection.'
-        'if the speech probability of a frame is higher than this value, '
-        'then this frame is speech.'
-    )
+    parser.add_argument('--vad_threshold',
+                        type=float,
+                        default=0.5,
+                        help='The threshold of Voice activity detection.'
+                        'if the speech probability of a frame is higher than this value, '
+                        'then this frame is speech.')
     parser.add_argument(
         '--model',
         type=str,
@@ -375,42 +370,37 @@ def cli():
         choices=['transcribe', 'translate'],
         default='transcribe',
         help='Whether to transcribe the audio (keep original language) or translate to English.')
-    parser.add_argument(
-        '--language',
-        type=str,
-        default='auto',
-        help='Language spoken in the stream. '
-        'Default option is to auto detect the spoken language. '
-        'See https://github.com/openai/whisper for available languages.')
-    parser.add_argument(
-        '--history_buffer_size',
-        type=int,
-        default=0,
-        help='Times of previous audio/text to use for conditioning the model. '
-        'Set to 0 to just use audio from the last processing. '
-        'Note that this can easily lead to repetition/loops if the chosen '
-        'language/model settings do not produce good results to begin with.')
-    parser.add_argument(
-        '--beam_size',
-        type=int,
-        default=5,
-        help='Number of beams in beam search. '
-        'Set to 0 to use greedy algorithm instead.')
+    parser.add_argument('--language',
+                        type=str,
+                        default='auto',
+                        help='Language spoken in the stream. '
+                        'Default option is to auto detect the spoken language. '
+                        'See https://github.com/openai/whisper for available languages.')
+    parser.add_argument('--history_buffer_size',
+                        type=int,
+                        default=0,
+                        help='Times of previous audio/text to use for conditioning the model. '
+                        'Set to 0 to just use audio from the last processing. '
+                        'Note that this can easily lead to repetition/loops if the chosen '
+                        'language/model settings do not produce good results to begin with.')
+    parser.add_argument('--beam_size',
+                        type=int,
+                        default=5,
+                        help='Number of beams in beam search. '
+                        'Set to 0 to use greedy algorithm instead.')
     parser.add_argument('--best_of',
                         type=int,
                         default=5,
                         help='Number of candidates when sampling with non-zero temperature.')
-    parser.add_argument(
-        '--use_faster_whisper',
-        action='store_true',
-        help='Set this flag to use faster-whisper implementation instead of '
-        'the original OpenAI implementation.')
-    parser.add_argument(
-        '--faster_whisper_model_path',
-        type=str,
-        default='whisper-large-v2-ct2/',
-        help='Path to a directory containing a Whisper model '
-        'in the CTranslate2 format.')
+    parser.add_argument('--use_faster_whisper',
+                        action='store_true',
+                        help='Set this flag to use faster-whisper implementation instead of '
+                        'the original OpenAI implementation.')
+    parser.add_argument('--faster_whisper_model_path',
+                        type=str,
+                        default='whisper-large-v2-ct2/',
+                        help='Path to a directory containing a Whisper model '
+                        'in the CTranslate2 format.')
     parser.add_argument('--faster_whisper_device',
                         type=str,
                         choices=['cuda', 'cpu', 'auto'],
@@ -422,11 +412,10 @@ def cli():
                         default='float16',
                         help='Set the quantization type for faster-whisper. See '
                         'https://opennmt.net/CTranslate2/quantization.html for more info.')
-    parser.add_argument(
-        '--use_whisper_api',
-        action='store_true',
-        help='Set this flag to use OpenAI Whisper API instead of '
-        'the original local Whipser.')
+    parser.add_argument('--use_whisper_api',
+                        action='store_true',
+                        help='Set this flag to use OpenAI Whisper API instead of '
+                        'the original local Whipser.')
     parser.add_argument('--whisper_filters',
                         type=str,
                         default='emoji_filter',
@@ -435,12 +424,11 @@ def cli():
                         type=str,
                         default=None,
                         help='OpenAI API key if using GPT translation / Whisper API.')
-    parser.add_argument(
-        '--gpt_translation_prompt',
-        type=str,
-        default=None,
-        help='If set, will translate result text to target language via GPT API. '
-        'Example: \"Translate from Japanese to Chinese\"')
+    parser.add_argument('--gpt_translation_prompt',
+                        type=str,
+                        default=None,
+                        help='If set, will translate result text to target language via GPT API. '
+                        'Example: \"Translate from Japanese to Chinese\"')
     parser.add_argument('--gpt_model',
                         type=str,
                         default="gpt-3.5-turbo",
@@ -454,12 +442,11 @@ def cli():
                         type=str,
                         default=None,
                         help='If set, will send the result text to the cqhttp server.')
-    parser.add_argument(
-        '--cqhttp_token',
-        type=str,
-        default=None,
-        help='Token of cqhttp, if it is not set on the server side, '
-        'it does not need to fill in.')
+    parser.add_argument('--cqhttp_token',
+                        type=str,
+                        default=None,
+                        help='Token of cqhttp, if it is not set on the server side, '
+                        'it does not need to fill in.')
 
     args = parser.parse_args().__dict__
     url = args.pop("URL")
