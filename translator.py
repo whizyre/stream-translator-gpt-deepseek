@@ -6,8 +6,6 @@ import sys
 import subprocess
 import tempfile
 import threading
-from collections import deque
-from datetime import datetime, timedelta
 from scipy.io.wavfile import write as write_audio
 
 import ffmpeg
@@ -15,7 +13,7 @@ import numpy as np
 from whisper.audio import SAMPLE_RATE
 
 import filters
-from openai_api import translate_by_gpt, whisper_transcribe
+from openai_api import ParallelTranslator, SerialTranslator, whisper_transcribe
 from vad import VAD
 
 
@@ -75,12 +73,14 @@ def open_stream(stream, direct_url, format, cookies):
         return process, None
 
     def writer(ytdlp_proc, ffmpeg_proc):
-        while (not ytdlp_proc.poll()) and (not ffmpeg_proc.poll()):
+        while (ytdlp_proc.poll() is None) and (ffmpeg_proc.poll() is None):
             try:
                 chunk = ytdlp_proc.stdout.read(1024)
                 ffmpeg_proc.stdin.write(chunk)
             except (BrokenPipeError, OSError):
                 pass
+        ytdlp_proc.kill()
+        ffmpeg_proc.kill()
 
     cmd = ['yt-dlp', stream, '-f', format, '-o', '-', '-q']
     if cookies:
@@ -117,14 +117,6 @@ def filter_text(text, whisper_filters):
             raise Exception('Unknown filter: %s' % filter_name)
         text = filter(text)
     return text
-
-
-class TranslationTask:
-
-    def __init__(self, text):
-        self.text = text
-        self.result_text = None
-        self.start_time = datetime.utcnow()
 
 
 class StreamSlicer:
@@ -181,7 +173,7 @@ class StreamSlicer:
 
 def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_threshold,
          min_audio_length, max_audio_length, vad_threshold, model, language, use_whisper_api,
-         whisper_filters, history_buffer_size, faster_whisper_args, gpt_translation_prompt,
+         whisper_filters, history_buffer_size, faster_whisper_args, gpt_translation_prompt, gpt_translation_history_size,
          openai_api_key, gpt_model, gpt_translation_timeout, cqhttp_url, cqhttp_token,
          **decode_options):
 
@@ -195,7 +187,6 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
                                  max_audio_length=max_audio_length,
                                  vad_threshold=vad_threshold,
                                  sampling_rate=SAMPLE_RATE)
-    translation_que = deque()
 
     if faster_whisper_args:
         print("Loading faster whisper model: {}".format(faster_whisper_args["model_path"]))
@@ -208,6 +199,22 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
         import whisper
         model = whisper.load_model(model)
 
+    translator = None
+    if gpt_translation_prompt and openai_api_key:
+        if gpt_translation_history_size == 0:
+            translator = ParallelTranslator(
+                openai_api_key=openai_api_key,
+                prompt=gpt_translation_prompt,
+                model=gpt_model,
+                timeout=gpt_translation_timeout)
+        else:
+            translator = SerialTranslator(
+                openai_api_key=openai_api_key,
+                prompt=gpt_translation_prompt,
+                model=gpt_model,
+                timeout=gpt_translation_timeout,
+                history_size=gpt_translation_history_size)
+
     print("Opening stream...")
     ffmpeg_process, ytdlp_process = open_stream(url, direct_url, format, cookies)
 
@@ -216,7 +223,6 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
         if ytdlp_process:
             ytdlp_process.kill()
         sys.exit(0)
-
     signal.signal(signal.SIGINT, handler)
 
     while ffmpeg_process.poll() is None:
@@ -235,8 +241,6 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
             clear_buffers = False
             if faster_whisper_args:
                 segments, info = model.transcribe(sliced_audio, language=language, **decode_options)
-
-                decoded_language = "" if language else "(" + info.language + ")"
                 decoded_text = ""
                 previous_segment = ""
                 for segment in segments:
@@ -251,7 +255,6 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
                     write_audio(audio_file, SAMPLE_RATE, sliced_audio)
                     decoded_text = whisper_transcribe(audio_file, openai_api_key)
                 new_prefix = decoded_text
-                decoded_language = ""
 
             else:
                 result = model.transcribe(np.concatenate(history_audio_buffer.get_all()),
@@ -260,7 +263,6 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
                                           without_timestamps=True,
                                           **decode_options)
 
-                decoded_language = "" if language else "(" + result.get("language") + ")"
                 decoded_text = result.get("text")
                 new_prefix = ""
                 for segment in result["segments"]:
@@ -279,33 +281,25 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
 
             decoded_text = filter_text(decoded_text, whisper_filters)
             if decoded_text.strip():
-                result_text = "{}{}".format(decoded_language, decoded_text)
-                print(result_text)
-                if gpt_translation_prompt and openai_api_key:
-                    translation_task = TranslationTask(result_text)
-                    translation_que.append(translation_task)
-                    thread = threading.Thread(target=translate_by_gpt,
-                                              args=(decoded_text, gpt_translation_prompt,
-                                                    openai_api_key, gpt_model, translation_task))
-                    thread.start()
+                print(decoded_text)
+                if translator:
+                    translator.put(decoded_text)
                 elif cqhttp_url:
-                    send_to_cqhttp(cqhttp_url, cqhttp_token, result_text)
+                    send_to_cqhttp(cqhttp_url, cqhttp_token, decoded_text)
             else:
                 print('skip...')
 
-        while len(translation_que) and (translation_que[0].result_text or
-                                        datetime.utcnow() - translation_que[0].start_time >
-                                        timedelta(seconds=gpt_translation_timeout)):
-            task = translation_que.popleft()
-            if task.result_text:
-                print('\033[1m{}\033[0m'.format(task.result_text))
+        if translator:
+            for task in translator.get_results():
                 if cqhttp_url:
-                    send_to_cqhttp(cqhttp_url, cqhttp_token,
-                                   "{}\n{}".format(task.text, task.result_text))
-            else:
-                print("Translation timeout: {}".format(task.text))
-                if cqhttp_url:
-                    send_to_cqhttp(cqhttp_url, cqhttp_token, task.text)
+                    if task.output_text:
+                        send_to_cqhttp(
+                            cqhttp_url, cqhttp_token,
+                            "{}\n{}".format(task.input_text, task.output_text))
+                    else:
+                        send_to_cqhttp(cqhttp_url, cqhttp_token, task.input_text)
+                if task.output_text:
+                    print('\033[1m{}\033[0m'.format(task.output_text))
 
     print("Stream ended")
 
@@ -429,6 +423,12 @@ def cli():
                         default=None,
                         help='If set, will translate result text to target language via GPT API. '
                         'Example: \"Translate from Japanese to Chinese\"')
+    parser.add_argument('--gpt_translation_history_size',
+                        type=int,
+                        default=0,
+                        help='The number of previous messages sent when calling the GPT API. '
+                        'If the history size is 0, the GPT API will be called parallelly. '
+                        'If the history size > 0, the GPT API will be called serially.')
     parser.add_argument('--gpt_model',
                         type=str,
                         default="gpt-3.5-turbo",
