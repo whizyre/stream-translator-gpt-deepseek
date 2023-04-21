@@ -6,7 +6,11 @@ from datetime import datetime, timedelta
 import openai
 
 
-def translate_by_gpt(translation_task, openai_api_key, assistant_prompt, model, history_messages=[]):
+def translate_by_gpt(translation_task,
+                     openai_api_key,
+                     assistant_prompt,
+                     model,
+                     history_messages=[]):
     # https://platform.openai.com/docs/api-reference/chat/create?lang=python
     openai.api_key = openai_api_key
     system_prompt = "You are a translation engine."
@@ -47,16 +51,16 @@ class ParallelTranslator():
         translation_task = TranslationTask(text)
         self.processing_queue.append(translation_task)
         thread = threading.Thread(target=translate_by_gpt,
-                                  args=(translation_task, self.openai_api_key,
-                                        self.prompt,
+                                  args=(translation_task, self.openai_api_key, self.prompt,
                                         self.model))
         thread.start()
 
     def get_results(self):
         results = []
-        while len(self.processing_queue) and (self.processing_queue[0].output_text or
-                                        datetime.utcnow() - self.processing_queue[0].start_time >
-                                        timedelta(seconds=self.timeout)):
+        while len(
+                self.processing_queue) and (self.processing_queue[0].output_text or
+                                            datetime.utcnow() - self.processing_queue[0].start_time
+                                            > timedelta(seconds=self.timeout)):
             task = self.processing_queue.popleft()
             results.append(task)
             if not task.output_text:
@@ -86,13 +90,17 @@ class SerialTranslator():
 
     def _run_loop(self):
         current_task = None
-        while(self.running):
+        while (self.running):
             if current_task:
-                if current_task.output_text or datetime.utcnow() - current_task.start_time > timedelta(seconds=self.timeout):
+                if current_task.output_text or datetime.utcnow(
+                ) - current_task.start_time > timedelta(seconds=self.timeout):
                     if current_task.output_text:
                         # self.history_messages.append({"role": "user", "content": current_task.input_text})
-                        self.history_messages.append({"role": "assistant", "content": current_task.output_text})
-                        while(len(self.history_messages) > self.history_size):
+                        self.history_messages.append({
+                            "role": "assistant",
+                            "content": current_task.output_text
+                        })
+                        while (len(self.history_messages) > self.history_size):
                             self.history_messages.pop(0)
                     self.output_queue.append(current_task)
                     current_task = None
@@ -100,8 +108,7 @@ class SerialTranslator():
                 text = self.input_queue.popleft()
                 current_task = TranslationTask(text)
                 thread = threading.Thread(target=translate_by_gpt,
-                                          args=(current_task, self.openai_api_key,
-                                                self.prompt,
+                                          args=(current_task, self.openai_api_key, self.prompt,
                                                 self.model, self.history_messages))
                 thread.start()
             time.sleep(0.1)

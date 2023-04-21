@@ -173,9 +173,9 @@ class StreamSlicer:
 
 def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_threshold,
          min_audio_length, max_audio_length, vad_threshold, model, language, use_whisper_api,
-         whisper_filters, history_buffer_size, faster_whisper_args, gpt_translation_prompt, gpt_translation_history_size,
-         openai_api_key, gpt_model, gpt_translation_timeout, cqhttp_url, cqhttp_token,
-         **decode_options):
+         whisper_filters, history_buffer_size, faster_whisper_args, gpt_translation_prompt,
+         gpt_translation_history_size, openai_api_key, gpt_model, gpt_translation_timeout,
+         cqhttp_url, cqhttp_token, **decode_options):
 
     n_bytes = round(frame_duration * SAMPLE_RATE *
                     2)  # Factor 2 comes from reading the int16 stream as bytes
@@ -202,18 +202,16 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
     translator = None
     if gpt_translation_prompt and openai_api_key:
         if gpt_translation_history_size == 0:
-            translator = ParallelTranslator(
-                openai_api_key=openai_api_key,
-                prompt=gpt_translation_prompt,
-                model=gpt_model,
-                timeout=gpt_translation_timeout)
+            translator = ParallelTranslator(openai_api_key=openai_api_key,
+                                            prompt=gpt_translation_prompt,
+                                            model=gpt_model,
+                                            timeout=gpt_translation_timeout)
         else:
-            translator = SerialTranslator(
-                openai_api_key=openai_api_key,
-                prompt=gpt_translation_prompt,
-                model=gpt_model,
-                timeout=gpt_translation_timeout,
-                history_size=gpt_translation_history_size)
+            translator = SerialTranslator(openai_api_key=openai_api_key,
+                                          prompt=gpt_translation_prompt,
+                                          model=gpt_model,
+                                          timeout=gpt_translation_timeout,
+                                          history_size=gpt_translation_history_size)
 
     print("Opening stream...")
     ffmpeg_process, ytdlp_process = open_stream(url, direct_url, format, cookies)
@@ -223,6 +221,7 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
         if ytdlp_process:
             ytdlp_process.kill()
         sys.exit(0)
+
     signal.signal(signal.SIGINT, handler)
 
     while ffmpeg_process.poll() is None:
@@ -293,9 +292,8 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
             for task in translator.get_results():
                 if cqhttp_url:
                     if task.output_text:
-                        send_to_cqhttp(
-                            cqhttp_url, cqhttp_token,
-                            "{}\n{}".format(task.input_text, task.output_text))
+                        send_to_cqhttp(cqhttp_url, cqhttp_token,
+                                       "{}\n{}".format(task.input_text, task.output_text))
                     else:
                         send_to_cqhttp(cqhttp_url, cqhttp_token, task.input_text)
                 if task.output_text:

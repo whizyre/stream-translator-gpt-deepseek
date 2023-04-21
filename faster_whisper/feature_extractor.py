@@ -84,8 +84,8 @@ class FeatureExtractor:
             half_window = (self.n_fft - 1) // 2 + 1
             if center:
                 start = i - half_window if i > half_window else 0
-                end = (i +
-                       half_window if i < waveform.shape[0] - half_window else waveform.shape[0])
+                end = (i + half_window if i < waveform.shape[0] -
+                       half_window else waveform.shape[0])
 
                 frame = waveform[start:end]
 
