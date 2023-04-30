@@ -19,6 +19,8 @@ def japanese_stream_filter(text):
             r'次の動画でお会いしましょう',
             r'最後までご視聴頂きありがとうございました',
             r'次の動画もお楽しみに',
+            r'次回もお楽しみに',
+            r'また次回の動画でお会いしましょう'
     ]:
         text = re.sub(filter_pattern, '', text)
 
