@@ -122,14 +122,16 @@ def filter_text(text, whisper_filters):
 class StreamSlicer:
 
     def __init__(self, frame_duration, continuous_no_speech_threshold, min_audio_length,
-                 max_audio_length, vad_threshold, sampling_rate):
+                 max_audio_length, prefix_retention_length, vad_threshold, sampling_rate):
         self.vad = VAD()
         self.continuous_no_speech_threshold = round(continuous_no_speech_threshold / frame_duration)
         self.min_audio_length = round(min_audio_length / frame_duration)
         self.max_audio_length = round(max_audio_length / frame_duration)
+        self.prefix_retention_length = round(prefix_retention_length / frame_duration)
         self.vad_threshold = vad_threshold
         self.sampling_rate = sampling_rate
         self.audio_buffer = []
+        self.prefix_audio_buffer = []
         self.speech_count = 0
         self.no_speech_count = 0
         self.continuous_no_speech_count = 0
@@ -160,19 +162,19 @@ class StreamSlicer:
         return False
 
     def slice(self):
-        concatenate_audio = np.concatenate(self.audio_buffer)
-        last_audio = self.audio_buffer[-1]
+        concatenate_buffer = self.prefix_audio_buffer + self.audio_buffer
+        concatenate_audio = np.concatenate(concatenate_buffer)
         self.audio_buffer = []
+        self.prefix_audio_buffer = concatenate_buffer[-self.prefix_retention_length:]
         self.speech_count = 0
         self.no_speech_count = 0
         self.continuous_no_speech_count = 0
         self.vad.reset_states()
-        self.put(last_audio)
         return concatenate_audio
 
 
 def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_threshold,
-         min_audio_length, max_audio_length, vad_threshold, model, language, use_whisper_api,
+         min_audio_length, max_audio_length, prefix_retention_length, vad_threshold, model, language, use_whisper_api,
          whisper_filters, history_buffer_size, faster_whisper_args, gpt_translation_prompt,
          gpt_translation_history_size, openai_api_key, gpt_model, gpt_translation_timeout,
          cqhttp_url, cqhttp_token, **decode_options):
@@ -185,6 +187,7 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
                                  continuous_no_speech_threshold=continuous_no_speech_threshold,
                                  min_audio_length=min_audio_length,
                                  max_audio_length=max_audio_length,
+                                 prefix_retention_length=prefix_retention_length,
                                  vad_threshold=vad_threshold,
                                  sampling_rate=SAMPLE_RATE)
 
@@ -341,6 +344,10 @@ def cli():
                         type=float,
                         default=30.0,
                         help='Maximum slice audio length in seconds.')
+    parser.add_argument('--prefix_retention_length',
+                        type=float,
+                        default=0.8,
+                        help='')
     parser.add_argument('--vad_threshold',
                         type=float,
                         default=0.5,
