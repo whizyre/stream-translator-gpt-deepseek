@@ -174,10 +174,10 @@ class StreamSlicer:
 
 
 def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_threshold,
-         min_audio_length, max_audio_length, prefix_retention_length, vad_threshold, model, language, use_whisper_api,
-         whisper_filters, history_buffer_size, faster_whisper_args, gpt_translation_prompt,
-         gpt_translation_history_size, openai_api_key, gpt_model, gpt_translation_timeout,
-         cqhttp_url, cqhttp_token, **decode_options):
+         min_audio_length, max_audio_length, prefix_retention_length, vad_threshold, model,
+         language, use_whisper_api, whisper_filters, history_buffer_size, faster_whisper_args,
+         gpt_translation_prompt, gpt_translation_history_size, openai_api_key, gpt_model,
+         gpt_translation_timeout, cqhttp_url, cqhttp_token, **decode_options):
 
     n_bytes = round(frame_duration * SAMPLE_RATE *
                     2)  # Factor 2 comes from reading the int16 stream as bytes
@@ -344,10 +344,7 @@ def cli():
                         type=float,
                         default=30.0,
                         help='Maximum slice audio length in seconds.')
-    parser.add_argument('--prefix_retention_length',
-                        type=float,
-                        default=0.8,
-                        help='')
+    parser.add_argument('--prefix_retention_length', type=float, default=0.8, help='')
     parser.add_argument('--vad_threshold',
                         type=float,
                         default=0.5,
