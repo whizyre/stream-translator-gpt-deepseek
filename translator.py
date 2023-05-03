@@ -143,11 +143,10 @@ class StreamSlicer:
             self.continuous_no_speech_count = 0
         else:
             if self.speech_count == 0 and self.no_speech_count == 1:
-                self.audio_buffer[0] = audio
-            else:
-                self.audio_buffer.append(audio)
-                self.no_speech_count += 1
-                self.continuous_no_speech_count += 1
+                self.slice()
+            self.audio_buffer.append(audio)
+            self.no_speech_count += 1
+            self.continuous_no_speech_count += 1
         if self.speech_count and self.no_speech_count / 4 > self.speech_count:
             self.slice()
 
@@ -169,7 +168,7 @@ class StreamSlicer:
         self.speech_count = 0
         self.no_speech_count = 0
         self.continuous_no_speech_count = 0
-        self.vad.reset_states()
+        # self.vad.reset_states()
         return concatenate_audio
 
 
