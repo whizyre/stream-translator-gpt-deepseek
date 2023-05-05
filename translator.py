@@ -187,9 +187,9 @@ def sec2str(second):
 
 def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_threshold,
          min_audio_length, max_audio_length, prefix_retention_length, vad_threshold, model,
-         language, faster_whisper_args, use_whisper_api, whisper_filters, output_timestamps, history_buffer_size,
-         gpt_translation_prompt, gpt_translation_history_size, openai_api_key, gpt_model,
-         gpt_translation_timeout, cqhttp_url, cqhttp_token, **decode_options):
+         language, faster_whisper_args, use_whisper_api, whisper_filters, output_timestamps,
+         history_buffer_size, gpt_translation_prompt, gpt_translation_history_size, openai_api_key,
+         gpt_model, gpt_translation_timeout, cqhttp_url, cqhttp_token, **decode_options):
 
     n_bytes = round(frame_duration * SAMPLE_RATE *
                     2)  # Factor 2 comes from reading the int16 stream as bytes
@@ -295,7 +295,8 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
 
             decoded_text = filter_text(decoded_text, whisper_filters)
             if decoded_text.strip():
-                timestamp_text = '{}-{} '.format(sec2str(time_range[0]), sec2str(time_range[1])) if output_timestamps else ''
+                timestamp_text = '{}-{} '.format(sec2str(time_range[0]), sec2str(
+                    time_range[1])) if output_timestamps else ''
                 print('{}{}'.format(timestamp_text, decoded_text))
                 if translator:
                     translation_task = TranslationTask(decoded_text, time_range)
@@ -308,14 +309,20 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
         if translator:
             for task in translator.get_results():
                 if cqhttp_url:
-                    timestamp_text = '{}-{}\n'.format(sec2str(task.time_range[0]), sec2str(task.time_range[1])) if output_timestamps else ''
+                    timestamp_text = '{}-{}\n'.format(sec2str(
+                        task.time_range[0]), sec2str(
+                            task.time_range[1])) if output_timestamps else ''
                     if task.output_text:
-                        send_to_cqhttp(cqhttp_url, cqhttp_token,
-                                       '{}{}\n{}'.format(timestamp_text, task.input_text, task.output_text))
+                        send_to_cqhttp(
+                            cqhttp_url, cqhttp_token,
+                            '{}{}\n{}'.format(timestamp_text, task.input_text, task.output_text))
                     else:
-                        send_to_cqhttp(cqhttp_url, cqhttp_token, '{}{}'.format(timestamp_text, task.input_text))
+                        send_to_cqhttp(cqhttp_url, cqhttp_token,
+                                       '{}{}'.format(timestamp_text, task.input_text))
                 if task.output_text:
-                    timestamp_text = '{}-{} '.format(sec2str(task.time_range[0]), sec2str(task.time_range[1])) if output_timestamps else ''
+                    timestamp_text = '{}-{} '.format(sec2str(
+                        task.time_range[0]), sec2str(
+                            task.time_range[1])) if output_timestamps else ''
                     print('\033[1m{}{}\033[0m'.format(timestamp_text, task.output_text))
 
     print("Stream ended")
@@ -432,9 +439,7 @@ def cli():
                         type=str,
                         default='emoji_filter',
                         help='Filters apply to whisper results, separated by ",".')
-    parser.add_argument('--output_timestamps',
-                        action='store_true',
-                        help='')
+    parser.add_argument('--output_timestamps', action='store_true', help='')
     parser.add_argument('--openai_api_key',
                         type=str,
                         default=None,
