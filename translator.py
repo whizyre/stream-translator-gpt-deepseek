@@ -367,7 +367,10 @@ def cli():
                         type=float,
                         default=30.0,
                         help='Maximum slice audio length in seconds.')
-    parser.add_argument('--prefix_retention_length', type=float, default=0.8, help='The length of the retention prefix audio during slicing.')
+    parser.add_argument('--prefix_retention_length',
+                        type=float,
+                        default=0.8,
+                        help='The length of the retention prefix audio during slicing.')
     parser.add_argument('--vad_threshold',
                         type=float,
                         default=0.5,
@@ -439,7 +442,9 @@ def cli():
                         type=str,
                         default='emoji_filter',
                         help='Filters apply to whisper results, separated by ",".')
-    parser.add_argument('--output_timestamps', action='store_true', help='Output the timestamp of the text when outputting the text.')
+    parser.add_argument('--output_timestamps',
+                        action='store_true',
+                        help='Output the timestamp of the text when outputting the text.')
     parser.add_argument('--openai_api_key',
                         type=str,
                         default=None,
