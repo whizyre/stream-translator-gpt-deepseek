@@ -32,9 +32,10 @@ def translate_by_gpt(translation_task,
 
 class TranslationTask:
 
-    def __init__(self, text):
+    def __init__(self, text, time_range=(0.0, 0.0)):
         self.input_text = text
         self.output_text = None
+        self.time_range = time_range
         self.start_time = datetime.utcnow()
 
 
@@ -47,8 +48,7 @@ class ParallelTranslator():
         self.timeout = timeout
         self.processing_queue = deque()
 
-    def put(self, text):
-        translation_task = TranslationTask(text)
+    def put(self, translation_task):
         self.processing_queue.append(translation_task)
         thread = threading.Thread(target=translate_by_gpt,
                                   args=(translation_task, self.openai_api_key, self.prompt,
@@ -105,16 +105,16 @@ class SerialTranslator():
                     self.output_queue.append(current_task)
                     current_task = None
             if current_task is None and len(self.input_queue):
-                text = self.input_queue.popleft()
-                current_task = TranslationTask(text)
+                current_task = self.input_queue.popleft()
+                current_task.start_time = datetime.utcnow()
                 thread = threading.Thread(target=translate_by_gpt,
                                           args=(current_task, self.openai_api_key, self.prompt,
                                                 self.model, self.history_messages))
                 thread.start()
             time.sleep(0.1)
 
-    def put(self, text):
-        self.input_queue.append(text)
+    def put(self, translation_task):
+        self.input_queue.append(translation_task)
 
     def get_results(self):
         results = []

@@ -6,6 +6,7 @@ import sys
 import subprocess
 import tempfile
 import threading
+from datetime import datetime
 from scipy.io.wavfile import write as write_audio
 
 import ffmpeg
@@ -13,7 +14,7 @@ import numpy as np
 from whisper.audio import SAMPLE_RATE
 
 import filters
-from openai_api import ParallelTranslator, SerialTranslator, whisper_transcribe
+from openai_api import TranslationTask, ParallelTranslator, SerialTranslator, whisper_transcribe
 from vad import VAD
 
 
@@ -135,8 +136,12 @@ class StreamSlicer:
         self.speech_count = 0
         self.no_speech_count = 0
         self.continuous_no_speech_count = 0
+        self.frame_duration = frame_duration
+        self.counter = 0
+        self.last_slice_second = 0.0
 
     def put(self, audio):
+        self.counter += 1
         if self.vad.is_speech(audio, self.vad_threshold, self.sampling_rate):
             self.audio_buffer.append(audio)
             self.speech_count += 1
@@ -169,12 +174,20 @@ class StreamSlicer:
         self.no_speech_count = 0
         self.continuous_no_speech_count = 0
         # self.vad.reset_states()
-        return concatenate_audio
+        slice_second = self.counter * self.frame_duration
+        last_slice_second = self.last_slice_second
+        self.last_slice_second = slice_second
+        return concatenate_audio, (last_slice_second, slice_second)
+
+
+def sec2str(second):
+    dt = datetime.utcfromtimestamp(second)
+    return dt.strftime('%H:%M:%S')
 
 
 def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_threshold,
          min_audio_length, max_audio_length, prefix_retention_length, vad_threshold, model,
-         language, use_whisper_api, whisper_filters, history_buffer_size, faster_whisper_args,
+         language, faster_whisper_args, use_whisper_api, whisper_filters, output_timestamps, history_buffer_size,
          gpt_translation_prompt, gpt_translation_history_size, openai_api_key, gpt_model,
          gpt_translation_timeout, cqhttp_url, cqhttp_token, **decode_options):
 
@@ -237,7 +250,7 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
 
         if stream_slicer.should_slice():
             # Decode the audio
-            sliced_audio = stream_slicer.slice()
+            sliced_audio, time_range = stream_slicer.slice()
             history_audio_buffer.append(sliced_audio)
             clear_buffers = False
             if faster_whisper_args:
@@ -282,9 +295,11 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
 
             decoded_text = filter_text(decoded_text, whisper_filters)
             if decoded_text.strip():
-                print(decoded_text)
+                timestamp_text = '{}-{} '.format(sec2str(time_range[0]), sec2str(time_range[1])) if output_timestamps else ''
+                print('{}{}'.format(timestamp_text, decoded_text))
                 if translator:
-                    translator.put(decoded_text)
+                    translation_task = TranslationTask(decoded_text, time_range)
+                    translator.put(translation_task)
                 elif cqhttp_url:
                     send_to_cqhttp(cqhttp_url, cqhttp_token, decoded_text)
             else:
@@ -293,13 +308,15 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
         if translator:
             for task in translator.get_results():
                 if cqhttp_url:
+                    timestamp_text = '{}-{}\n'.format(sec2str(task.time_range[0]), sec2str(task.time_range[1])) if output_timestamps else ''
                     if task.output_text:
                         send_to_cqhttp(cqhttp_url, cqhttp_token,
-                                       "{}\n{}".format(task.input_text, task.output_text))
+                                       '{}{}\n{}'.format(timestamp_text, task.input_text, task.output_text))
                     else:
-                        send_to_cqhttp(cqhttp_url, cqhttp_token, task.input_text)
+                        send_to_cqhttp(cqhttp_url, cqhttp_token, '{}{}'.format(timestamp_text, task.input_text))
                 if task.output_text:
-                    print('\033[1m{}\033[0m'.format(task.output_text))
+                    timestamp_text = '{}-{} '.format(sec2str(task.time_range[0]), sec2str(task.time_range[1])) if output_timestamps else ''
+                    print('\033[1m{}{}\033[0m'.format(timestamp_text, task.output_text))
 
     print("Stream ended")
 
@@ -415,6 +432,9 @@ def cli():
                         type=str,
                         default='emoji_filter',
                         help='Filters apply to whisper results, separated by ",".')
+    parser.add_argument('--output_timestamps',
+                        action='store_true',
+                        help='')
     parser.add_argument('--openai_api_key',
                         type=str,
                         default=None,
