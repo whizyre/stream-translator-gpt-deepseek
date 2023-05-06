@@ -518,8 +518,9 @@ def cli():
         args['beam_size'] = None
 
     # Remove yt-dlp cache
-    if os.path.exists('--Frag1'):
-        os.remove('--Frag1')
+    for file in os.listdir('./'):
+        if file.startswith('--Frag'):
+            os.remove(file)
 
     main(url, faster_whisper_args=faster_whisper_args if use_faster_whisper else None, **args)
 
