@@ -16,7 +16,7 @@ Sample: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.s
 ## Setup
 
 1. Setup a virtual environment.
-2. ```git clone https://github.com/fortypercnt/stream-translator.git```
+2. ```git clone https://github.com/ionic-bond/stream-translator-gpt```
 3. ```pip install -r requirements.txt```
 4. Make sure that pytorch is installed with CUDA support. Whisper will probably not run in real time on a CPU.
 
