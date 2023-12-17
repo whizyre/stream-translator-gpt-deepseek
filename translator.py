@@ -375,15 +375,17 @@ def cli():
                         help='The threshold of Voice activity detection.'
                         'if the speech probability of a frame is higher than this value, '
                         'then this frame is speech.')
-    parser.add_argument(
-        '--model',
-        type=str,
-        choices=['tiny', 'tiny.en', 'small', 'small.en', 'medium', 'medium.en', 'large', 'large-v1', 'large-v2', 'large-v3'],
-        default='small',
-        help='Model to be used for generating audio transcription. '
-        'Smaller models are faster and use less VRAM, '
-        'but are also less accurate. .en models are more accurate '
-        'but only work on English audio.')
+    parser.add_argument('--model',
+                        type=str,
+                        choices=[
+                            'tiny', 'tiny.en', 'small', 'small.en', 'medium', 'medium.en', 'large',
+                            'large-v1', 'large-v2', 'large-v3'
+                        ],
+                        default='small',
+                        help='Model to be used for generating audio transcription. '
+                        'Smaller models are faster and use less VRAM, '
+                        'but are also less accurate. .en models are more accurate '
+                        'but only work on English audio.')
     parser.add_argument(
         '--task',
         type=str,
