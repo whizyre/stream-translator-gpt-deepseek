@@ -187,7 +187,7 @@ def sec2str(second):
 
 def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_threshold,
          min_audio_length, max_audio_length, prefix_retention_length, vad_threshold, model,
-         language, faster_whisper_args, use_whisper_api, whisper_filters, output_timestamps,
+         language, use_faster_whisper, use_whisper_api, whisper_filters, output_timestamps,
          history_buffer_size, gpt_translation_prompt, gpt_translation_history_size, openai_api_key,
          gpt_model, gpt_translation_timeout, cqhttp_url, cqhttp_token, **decode_options):
 
@@ -203,12 +203,10 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
                                  vad_threshold=vad_threshold,
                                  sampling_rate=SAMPLE_RATE)
 
-    if faster_whisper_args:
-        print("Loading faster whisper model: {}".format(faster_whisper_args["model_path"]))
+    if use_faster_whisper:
+        print("Loading faster whisper model: {}".format(model))
         from faster_whisper import WhisperModel
-        model = WhisperModel(faster_whisper_args["model_path"],
-                             device=faster_whisper_args["device"],
-                             compute_type=faster_whisper_args["compute_type"])
+        model = WhisperModel(model)
     elif not use_whisper_api:
         print("Loading whisper model: {}".format(model))
         import whisper
@@ -253,7 +251,7 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
             sliced_audio, time_range = stream_slicer.slice()
             history_audio_buffer.append(sliced_audio)
             clear_buffers = False
-            if faster_whisper_args:
+            if use_faster_whisper:
                 segments, info = model.transcribe(sliced_audio, language=language, **decode_options)
                 decoded_text = ""
                 previous_segment = ""
@@ -380,7 +378,7 @@ def cli():
     parser.add_argument(
         '--model',
         type=str,
-        choices=['tiny', 'tiny.en', 'small', 'small.en', 'medium', 'medium.en', 'large'],
+        choices=['tiny', 'tiny.en', 'small', 'small.en', 'medium', 'medium.en', 'large', 'large-v1', 'large-v2', 'large-v3'],
         default='small',
         help='Model to be used for generating audio transcription. '
         'Smaller models are faster and use less VRAM, '
@@ -418,22 +416,6 @@ def cli():
                         action='store_true',
                         help='Set this flag to use faster-whisper implementation instead of '
                         'the original OpenAI implementation.')
-    parser.add_argument('--faster_whisper_model_path',
-                        type=str,
-                        default='whisper-large-v2-ct2/',
-                        help='Path to a directory containing a Whisper model '
-                        'in the CTranslate2 format.')
-    parser.add_argument('--faster_whisper_device',
-                        type=str,
-                        choices=['cuda', 'cpu', 'auto'],
-                        default='cuda',
-                        help='Set the device to run faster-whisper on.')
-    parser.add_argument('--faster_whisper_compute_type',
-                        type=str,
-                        choices=['int8', 'int8_float16', 'int16', 'float16'],
-                        default='float16',
-                        help='Set the quantization type for faster-whisper. See '
-                        'https://opennmt.net/CTranslate2/quantization.html for more info.')
     parser.add_argument('--use_whisper_api',
                         action='store_true',
                         help='Set this flag to use OpenAI Whisper API instead of '
@@ -481,11 +463,6 @@ def cli():
 
     args = parser.parse_args().__dict__
     url = args.pop("URL")
-    use_faster_whisper = args.pop("use_faster_whisper")
-    faster_whisper_args = dict()
-    faster_whisper_args["model_path"] = args.pop("faster_whisper_model_path")
-    faster_whisper_args["device"] = args.pop("faster_whisper_device")
-    faster_whisper_args["compute_type"] = args.pop("faster_whisper_compute_type")
 
     if args['model'].endswith('.en'):
         if args['model'] == 'large.en':
@@ -503,7 +480,7 @@ def cli():
                 )
                 sys.exit(0)
 
-    if use_faster_whisper and args['use_whisper_api']:
+    if args['use_faster_whisper'] and args['use_whisper_api']:
         print("Cannot use Faster Whisper and Whisper API at the same time")
         sys.exit(0)
 
@@ -522,7 +499,7 @@ def cli():
         if file.startswith('--Frag'):
             os.remove(file)
 
-    main(url, faster_whisper_args=faster_whisper_args if use_faster_whisper else None, **args)
+    main(url, **args)
 
 
 if __name__ == '__main__':
