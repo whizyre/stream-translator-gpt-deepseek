@@ -83,8 +83,8 @@ class SerialTranslator():
         current_task = None
         while True:
             if current_task:
-                if (current_task.translated_text or datetime.utcnow(
-                ) - current_task.start_time > timedelta(seconds=self.timeout)):
+                if (current_task.translated_text or datetime.utcnow() - current_task.start_time
+                        > timedelta(seconds=self.timeout)):
                     if current_task.translated_text:
                         # self.history_messages.append({"role": "user", "content": current_task.transcribed_text})
                         self.history_messages.append({
@@ -103,8 +103,8 @@ class SerialTranslator():
                 current_task = input_queue.get()
                 current_task.start_time = datetime.utcnow()
                 thread = threading.Thread(target=_translate_by_gpt,
-                                          args=(self.client, current_task, self.prompt,
-                                                self.model, self.history_messages))
+                                          args=(self.client, current_task, self.prompt, self.model,
+                                                self.history_messages))
                 thread.daemon = True
                 thread.start()
             time.sleep(0.1)
