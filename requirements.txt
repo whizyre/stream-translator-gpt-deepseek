@@ -1,10 +1,9 @@
 numpy
 tqdm
 more-itertools
---extra-index-url https://download.pytorch.org/whl/cu113
 torch
 ffmpeg-python==0.2.0
-openai-whisper
-faster-whisper
-openai==0.28
+openai-whisper==20231117
+faster-whisper==0.10.0
+openai==1.6.0
 yt-dlp
