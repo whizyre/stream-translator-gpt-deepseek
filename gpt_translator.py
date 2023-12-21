@@ -83,8 +83,8 @@ class SerialTranslator():
         current_task = None
         while True:
             if current_task:
-                if current_task.translated_text or datetime.utcnow(
-                ) - current_task.start_time > timedelta(seconds=self.timeout):
+                if (current_task.translated_text or datetime.utcnow(
+                ) - current_task.start_time > timedelta(seconds=self.timeout)):
                     if current_task.translated_text:
                         # self.history_messages.append({"role": "user", "content": current_task.transcribed_text})
                         self.history_messages.append({
@@ -96,15 +96,15 @@ class SerialTranslator():
                     else:
                         print("Translation timeout or failed: {}".format(
                             current_task.transcribed_text))
-                    output_queue.append(current_task)
+                    output_queue.put(current_task)
                     current_task = None
 
-                if current_task is None and not input_queue.empty():
-                    current_task = input_queue.get()
-                    current_task.start_time = datetime.utcnow()
-                    thread = threading.Thread(target=_translate_by_gpt,
-                                              args=(self.client, current_task, self.prompt,
-                                                    self.model, self.history_messages))
-                    thread.daemon = True
-                    thread.start()
+            if current_task is None and not input_queue.empty():
+                current_task = input_queue.get()
+                current_task.start_time = datetime.utcnow()
+                thread = threading.Thread(target=_translate_by_gpt,
+                                          args=(self.client, current_task, self.prompt,
+                                                self.model, self.history_messages))
+                thread.daemon = True
+                thread.start()
             time.sleep(0.1)

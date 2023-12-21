@@ -60,7 +60,7 @@ class StreamAudioGetter():
 
     def __init__(self, url: str, direct_url: bool, format: str, cookies: str,
                  frame_duration: float):
-        print("Opening stream {}".format(url))
+        print("Opening stream: {}".format(url))
         self.ffmpeg_process, self.ytdlp_process = _open_stream(url, direct_url, format, cookies)
         self.byte_size = round(frame_duration * SAMPLE_RATE *
                                2)  # Factor 2 comes from reading the int16 stream as bytes
