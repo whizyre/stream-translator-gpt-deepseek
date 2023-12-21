@@ -21,12 +21,12 @@ def _start_daemon_thread(func, *args, **kwargs):
 def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_threshold,
          min_audio_length, max_audio_length, prefix_retention_length, vad_threshold, model,
          use_faster_whisper, use_whisper_api, whisper_filters, output_timestamps,
-         gpt_translation_prompt, gpt_translation_history_size, openai_api_key,
-         gpt_model, gpt_translation_timeout, cqhttp_url, cqhttp_token, **transcribe_options):
+         gpt_translation_prompt, gpt_translation_history_size, openai_api_key, gpt_model,
+         gpt_translation_timeout, cqhttp_url, cqhttp_token, **transcribe_options):
 
     if openai_api_key:
         os.environ['OPENAI_API_KEY'] = openai_api_key
-    
+
     # Reverse order initialization
     result_exporter = ResultExporter(output_timestamps, cqhttp_url, cqhttp_token)
     gpt_translator = None
@@ -46,23 +46,28 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
         audio_transcriber = RemoteOpenaiWhisper()
     else:
         audio_transcriber = OpenaiWhisper(model)
-    audio_slicer = AudioSlicer(frame_duration, continuous_no_speech_threshold, min_audio_length, max_audio_length, prefix_retention_length, vad_threshold)
+    audio_slicer = AudioSlicer(frame_duration, continuous_no_speech_threshold, min_audio_length,
+                               max_audio_length, prefix_retention_length, vad_threshold)
     audio_getter = StreamAudioGetter(url, direct_url, format, cookies, frame_duration)
-    
+
     getter_to_slicer_queue = queue.SimpleQueue()
     slicer_to_transcriber_queue = queue.SimpleQueue()
     transcriber_to_translator_queue = queue.SimpleQueue()
-    translator_to_exporter_queue = queue.SimpleQueue() if gpt_translator else transcriber_to_translator_queue
+    translator_to_exporter_queue = queue.SimpleQueue(
+    ) if gpt_translator else transcriber_to_translator_queue
 
     _start_daemon_thread(result_exporter.work, translator_to_exporter_queue)
     if gpt_translator:
-        _start_daemon_thread(gpt_translator.work, transcriber_to_translator_queue, translator_to_exporter_queue)
-    _start_daemon_thread(audio_transcriber.work, slicer_to_transcriber_queue, transcriber_to_translator_queue, whisper_filters, **transcribe_options)
+        _start_daemon_thread(gpt_translator.work, transcriber_to_translator_queue,
+                             translator_to_exporter_queue)
+    _start_daemon_thread(audio_transcriber.work, slicer_to_transcriber_queue,
+                         transcriber_to_translator_queue, whisper_filters, **transcribe_options)
     _start_daemon_thread(audio_slicer.work, getter_to_slicer_queue, slicer_to_transcriber_queue)
     audio_getter.work(output_queue=getter_to_slicer_queue)
 
     # Wait for others process finish.
-    while (not getter_to_slicer_queue.empty() or not slicer_to_transcriber_queue.empty() or not transcriber_to_translator_queue.empty() or not translator_to_exporter_queue.empty()):
+    while (not getter_to_slicer_queue.empty() or not slicer_to_transcriber_queue.empty() or
+           not transcriber_to_translator_queue.empty() or not translator_to_exporter_queue.empty()):
         time.sleep(5)
     print("Stream ended")
 
@@ -219,7 +224,7 @@ def cli():
     if (args['use_whisper_api'] or args['gpt_translation_prompt']) and not args['openai_api_key']:
         print("Please fill in the OpenAI API key when enabling GPT translation or Whisper API")
         sys.exit(0)
-    
+
     if args['language'] == 'auto':
         args['language'] = None
 

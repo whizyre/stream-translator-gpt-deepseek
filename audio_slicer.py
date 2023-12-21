@@ -36,8 +36,9 @@ class VAD:
 
 class AudioSlicer:
 
-    def __init__(self, frame_duration: float, continuous_no_speech_threshold: float, min_audio_length: float,
-                 max_audio_length: float, prefix_retention_length: float, vad_threshold: float):
+    def __init__(self, frame_duration: float, continuous_no_speech_threshold: float,
+                 min_audio_length: float, max_audio_length: float, prefix_retention_length: float,
+                 vad_threshold: float):
         self.vad = VAD()
         self.continuous_no_speech_threshold = round(continuous_no_speech_threshold / frame_duration)
         self.min_audio_length = round(min_audio_length / frame_duration)
@@ -92,8 +93,9 @@ class AudioSlicer:
         last_slice_second = self.last_slice_second
         self.last_slice_second = slice_second
         return concatenate_audio, (last_slice_second, slice_second)
-    
-    def work(self, input_queue: queue.SimpleQueue[np.array], output_queue: queue.SimpleQueue[TranslationTask]):
+
+    def work(self, input_queue: queue.SimpleQueue[np.array],
+             output_queue: queue.SimpleQueue[TranslationTask]):
         while True:
             audio = input_queue.get()
             self.put(audio)

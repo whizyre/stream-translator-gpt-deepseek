@@ -29,15 +29,16 @@ class OpenaiWhisper():
         self.model = whisper.load_model(model)
 
     def transcribe(self, audio: np.array, **transcribe_options) -> str:
-        result = self.model.transcribe(audio,
-                                       without_timestamps=True,
-                                       **transcribe_options)
+        result = self.model.transcribe(audio, without_timestamps=True, **transcribe_options)
         return result.get("text")
-    
-    def work(self, input_queue: queue.SimpleQueue[TranslationTask], output_queue: queue.SimpleQueue[TranslationTask], whisper_filters, **transcribe_options):
+
+    def work(self, input_queue: queue.SimpleQueue[TranslationTask],
+             output_queue: queue.SimpleQueue[TranslationTask], whisper_filters,
+             **transcribe_options):
         while True:
             task = input_queue.get()
-            task.transcribed_text = _filter_text(self.transcribe(task.audio, **transcribe_options), whisper_filters)
+            task.transcribed_text = _filter_text(self.transcribe(task.audio, **transcribe_options),
+                                                 whisper_filters)
             print(task.transcribed_text)
             output_queue.put(task)
 
@@ -67,6 +68,7 @@ class RemoteOpenaiWhisper(OpenaiWhisper):
         with open(TEMP_AUDIO_FILE_NAME, 'wb') as audio_file:
             write_audio(audio_file, SAMPLE_RATE, audio)
         with open(TEMP_AUDIO_FILE_NAME, 'rb') as audio_file:
-            result = self.client.audio.transcriptions.create(model="whisper-1", file=audio_file, language=transcribe_options['language']).text
+            result = self.client.audio.transcriptions.create(
+                model="whisper-1", file=audio_file, language=transcribe_options['language']).text
         os.remove(TEMP_AUDIO_FILE_NAME)
         return result

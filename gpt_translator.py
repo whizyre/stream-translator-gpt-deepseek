@@ -9,11 +9,7 @@ from openai import OpenAI
 from common import TranslationTask
 
 
-def _translate_by_gpt(client,
-                      translation_task,
-                      assistant_prompt,
-                      model,
-                      history_messages=[]):
+def _translate_by_gpt(client, translation_task, assistant_prompt, model, history_messages=[]):
     # https://platform.openai.com/docs/api-reference/chat/create?lang=python
     system_prompt = "You are a translation engine."
     messages = [{"role": "system", "content": system_prompt}]
@@ -60,7 +56,8 @@ class ParallelTranslator():
                 print("Translation timeout or failed: {}".format(task.transcribed_text))
         return results
 
-    def work(self, input_queue: queue.SimpleQueue[TranslationTask], output_queue: queue.SimpleQueue[TranslationTask]):
+    def work(self, input_queue: queue.SimpleQueue[TranslationTask],
+             output_queue: queue.SimpleQueue[TranslationTask]):
         while True:
             if not input_queue.empty():
                 task = input_queue.get()
@@ -80,8 +77,9 @@ class SerialTranslator():
         self.history_size = history_size
         self.client = OpenAI()
         self.history_messages = []
-    
-    def work(self, input_queue: queue.SimpleQueue[TranslationTask], output_queue: queue.SimpleQueue[TranslationTask]):
+
+    def work(self, input_queue: queue.SimpleQueue[TranslationTask],
+             output_queue: queue.SimpleQueue[TranslationTask]):
         current_task = None
         while True:
             if current_task:
@@ -96,15 +94,17 @@ class SerialTranslator():
                         while (len(self.history_messages) > self.history_size):
                             self.history_messages.pop(0)
                     else:
-                        print("Translation timeout or failed: {}".format(current_task.transcribed_text))
+                        print("Translation timeout or failed: {}".format(
+                            current_task.transcribed_text))
                     output_queue.append(current_task)
                     current_task = None
-                
+
                 if current_task is None and not input_queue.empty():
                     current_task = input_queue.get()
                     current_task.start_time = datetime.utcnow()
                     thread = threading.Thread(target=_translate_by_gpt,
-                                              args=(self.client, current_task, self.prompt, self.model, self.history_messages))
+                                              args=(self.client, current_task, self.prompt,
+                                                    self.model, self.history_messages))
                     thread.daemon = True
                     thread.start()
             time.sleep(0.1)
