@@ -5,7 +5,7 @@ import sys
 import threading
 import time
 
-from audio_getter import StreamAudioGetter
+from audio_getter import StreamAudioGetter, DeviceAudioGetter
 from audio_slicer import AudioSlicer
 from audio_transcriber import OpenaiWhisper, FasterWhisper, RemoteOpenaiWhisper
 from gpt_translator import ParallelTranslator, SerialTranslator
@@ -18,7 +18,7 @@ def _start_daemon_thread(func, *args, **kwargs):
     thread.start()
 
 
-def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_threshold,
+def main(url, format, direct_url, cookies, device_index, frame_duration, continuous_no_speech_threshold,
          min_audio_length, max_audio_length, prefix_retention_length, vad_threshold, model,
          use_faster_whisper, use_whisper_api, whisper_filters, output_timestamps,
          gpt_translation_prompt, gpt_translation_history_size, openai_api_key, gpt_model,
@@ -48,7 +48,10 @@ def main(url, format, direct_url, cookies, frame_duration, continuous_no_speech_
         audio_transcriber = OpenaiWhisper(model)
     audio_slicer = AudioSlicer(frame_duration, continuous_no_speech_threshold, min_audio_length,
                                max_audio_length, prefix_retention_length, vad_threshold)
-    audio_getter = StreamAudioGetter(url, direct_url, format, cookies, frame_duration)
+    if url.lower() == 'device':
+        audio_getter = DeviceAudioGetter(device_index, frame_duration)
+    else:
+        audio_getter = StreamAudioGetter(url, direct_url, format, cookies, frame_duration)
 
     getter_to_slicer_queue = queue.SimpleQueue()
     slicer_to_transcriber_queue = queue.SimpleQueue()
@@ -91,6 +94,11 @@ def cli():
                         default=None,
                         help='Used to open member-only stream, '
                         'this parameter will be passed directly to yt-dlp.')
+    parser.add_argument('--device_index',
+                        type=int,
+                        default=None,
+                        help='The index of the device that needs to be recorded. '
+                        'If not set, the system default recording device will be used.')
     parser.add_argument('--frame_duration',
                         type=float,
                         default=0.1,

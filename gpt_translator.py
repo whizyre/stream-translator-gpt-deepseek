@@ -4,28 +4,31 @@ import time
 from collections import deque
 from datetime import datetime, timedelta
 
-from openai import OpenAI
+from openai import OpenAI, APITimeoutError, APIConnectionError
 
 from common import TranslationTask
 
 
 def _translate_by_gpt(client, translation_task, assistant_prompt, model, history_messages=[]):
     # https://platform.openai.com/docs/api-reference/chat/create?lang=python
-    system_prompt = "You are a translation engine."
-    messages = [{"role": "system", "content": system_prompt}]
-    messages.extend(history_messages)
-    messages.append({"role": "user", "content": assistant_prompt})
-    messages.append({"role": "user", "content": translation_task.transcribed_text})
-    completion = client.chat.completions.create(
-        model=model,
-        temperature=0,
-        max_tokens=1000,
-        top_p=1,
-        frequency_penalty=1,
-        presence_penalty=1,
-        messages=messages,
-    )
-    translation_task.translated_text = completion.choices[0].message.content
+    try:
+        system_prompt = "You are a translation engine."
+        messages = [{"role": "system", "content": system_prompt}]
+        messages.extend(history_messages)
+        messages.append({"role": "user", "content": assistant_prompt})
+        messages.append({"role": "user", "content": translation_task.transcribed_text})
+        completion = client.chat.completions.create(
+            model=model,
+            temperature=0,
+            max_tokens=1000,
+            top_p=1,
+            frequency_penalty=1,
+            presence_penalty=1,
+            messages=messages,
+        )
+        translation_task.translated_text = completion.choices[0].message.content
+    except (APITimeoutError, APIConnectionError) as e:
+        print(e)
 
 
 class ParallelTranslator():
