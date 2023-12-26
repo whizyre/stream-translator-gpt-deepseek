@@ -18,11 +18,12 @@ def _start_daemon_thread(func, *args, **kwargs):
     thread.start()
 
 
-def main(url, format, direct_url, cookies, device_index, frame_duration, continuous_no_speech_threshold,
-         min_audio_length, max_audio_length, prefix_retention_length, vad_threshold, model,
-         use_faster_whisper, use_whisper_api, whisper_filters, output_timestamps,
-         gpt_translation_prompt, gpt_translation_history_size, openai_api_key, gpt_model,
-         gpt_translation_timeout, cqhttp_url, cqhttp_token, **transcribe_options):
+def main(url, format, direct_url, cookies, device_index, frame_duration,
+         continuous_no_speech_threshold, min_audio_length, max_audio_length,
+         prefix_retention_length, vad_threshold, model, use_faster_whisper, use_whisper_api,
+         whisper_filters, output_timestamps, gpt_translation_prompt, gpt_translation_history_size,
+         openai_api_key, gpt_model, gpt_translation_timeout, cqhttp_url, cqhttp_token,
+         **transcribe_options):
 
     if openai_api_key:
         os.environ['OPENAI_API_KEY'] = openai_api_key

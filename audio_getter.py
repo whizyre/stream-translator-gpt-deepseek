@@ -96,8 +96,11 @@ class DeviceAudioGetter():
         sd.default.dtype[0] = np.float32
         self.frame_duration = frame_duration
         print("Recording device: {}".format(sd.query_devices(sd.default.device[0])['name']))
-    
+
     def work(self, output_queue: queue.SimpleQueue[np.array]):
         while True:
-            audio = sd.rec(frames=round(SAMPLE_RATE*self.frame_duration), samplerate=SAMPLE_RATE, channels=1, blocking=True).flatten()
+            audio = sd.rec(frames=round(SAMPLE_RATE * self.frame_duration),
+                           samplerate=SAMPLE_RATE,
+                           channels=1,
+                           blocking=True).flatten()
             output_queue.put(audio)
