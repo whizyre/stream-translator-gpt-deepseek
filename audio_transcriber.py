@@ -3,8 +3,6 @@ import queue
 from scipy.io.wavfile import write as write_audio
 
 import numpy as np
-import whisper
-from faster_whisper import WhisperModel
 from openai import OpenAI
 
 import filters
@@ -27,6 +25,7 @@ class OpenaiWhisper():
 
     def __init__(self, model: str) -> None:
         print("Loading whisper model: {}".format(model))
+        import whisper
         self.model = whisper.load_model(model)
 
     def transcribe(self, audio: np.array, **transcribe_options) -> str:
@@ -51,6 +50,7 @@ class FasterWhisper(OpenaiWhisper):
 
     def __init__(self, model: str) -> None:
         print("Loading faster-whisper model: {}".format(model))
+        from faster_whisper import WhisperModel
         self.model = WhisperModel(model)
 
     def transcribe(self, audio: np.array, **transcribe_options) -> str:
