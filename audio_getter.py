@@ -6,7 +6,6 @@ import threading
 
 import ffmpeg
 import numpy as np
-import sounddevice as sd
 
 from common import SAMPLE_RATE
 
@@ -91,6 +90,7 @@ class StreamAudioGetter():
 class DeviceAudioGetter():
 
     def __init__(self, device_index: int, frame_duration: float) -> None:
+        import sounddevice as sd
         if device_index:
             sd.default.device[0] = device_index
         sd.default.dtype[0] = np.float32

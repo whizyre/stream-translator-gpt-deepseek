@@ -7,3 +7,4 @@ openai-whisper==20231117
 faster-whisper==0.10.0
 openai==1.6.0
 yt-dlp
+sounddevice

@@ -13,7 +13,9 @@ def _send_to_cqhttp(url: str, token: str, text: str):
 
 def _sec2str(second):
     dt = datetime.utcfromtimestamp(second)
-    return dt.strftime('%H:%M:%S')
+    result = dt.strftime('%H:%M:%S')
+    result += ',' + str(round(second * 10 % 10))
+    return result
 
 
 class ResultExporter():
@@ -26,7 +28,7 @@ class ResultExporter():
     def work(self, input_queue: queue.SimpleQueue[TranslationTask]):
         while True:
             task = input_queue.get()
-            timestamp_text = '{}-{}'.format(_sec2str(task.time_range[0]),
+            timestamp_text = '{} --> {}'.format(_sec2str(task.time_range[0]),
                                             _sec2str(task.time_range[1]))
             text_to_send = task.transcribed_text
             if self.output_timestamps:

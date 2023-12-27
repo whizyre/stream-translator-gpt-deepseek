@@ -38,7 +38,10 @@ class OpenaiWhisper():
         while True:
             task = input_queue.get()
             task.transcribed_text = _filter_text(self.transcribe(task.audio, **transcribe_options),
-                                                 whisper_filters)
+                                                 whisper_filters).strip()
+            if not task.transcribed_text:
+                print('skip...')
+                continue
             print(task.transcribed_text)
             output_queue.put(task)
 
