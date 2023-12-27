@@ -29,7 +29,7 @@ class ResultExporter():
         while True:
             task = input_queue.get()
             timestamp_text = '{} --> {}'.format(_sec2str(task.time_range[0]),
-                                            _sec2str(task.time_range[1]))
+                                                _sec2str(task.time_range[1]))
             text_to_send = task.transcribed_text
             if self.output_timestamps:
                 text_to_send = timestamp_text + '\n' + text_to_send
