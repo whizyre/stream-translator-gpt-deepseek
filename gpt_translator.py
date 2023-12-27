@@ -9,7 +9,11 @@ from openai import OpenAI, APITimeoutError, APIConnectionError
 from common import TranslationTask
 
 
-def _translate_by_gpt(client: OpenAI, translation_task: TranslationTask, assistant_prompt: str, model: str, history_messages: list=[]):
+def _translate_by_gpt(client: OpenAI,
+                      translation_task: TranslationTask,
+                      assistant_prompt: str,
+                      model: str,
+                      history_messages: list = []):
     # https://platform.openai.com/docs/api-reference/chat/create?lang=python
     try:
         system_prompt = "You are a translation engine."
