@@ -21,7 +21,7 @@ class VAD:
     def __init__(self):
         self.model = _init_jit_model("silero_vad.jit")
 
-    def is_speech(self, audio, threshold: float = 0.5, sampling_rate: int = 16000):
+    def is_speech(self, audio: np.array, threshold: float = 0.5, sampling_rate: int = 16000):
         if not torch.is_tensor(audio):
             try:
                 audio = torch.Tensor(audio)
@@ -55,7 +55,7 @@ class AudioSlicer:
         self.counter = 0
         self.last_slice_second = 0.0
 
-    def put(self, audio):
+    def put(self, audio: np.array):
         self.counter += 1
         if self.vad.is_speech(audio, self.vad_threshold, self.sampling_rate):
             self.audio_buffer.append(audio)

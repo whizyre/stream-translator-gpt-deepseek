@@ -9,7 +9,7 @@ from openai import OpenAI, APITimeoutError, APIConnectionError
 from common import TranslationTask
 
 
-def _translate_by_gpt(client, translation_task, assistant_prompt, model, history_messages=[]):
+def _translate_by_gpt(client: OpenAI, translation_task: TranslationTask, assistant_prompt: str, model: str, history_messages: list=[]):
     # https://platform.openai.com/docs/api-reference/chat/create?lang=python
     try:
         system_prompt = "You are a translation engine."
@@ -33,14 +33,14 @@ def _translate_by_gpt(client, translation_task, assistant_prompt, model, history
 
 class ParallelTranslator():
 
-    def __init__(self, prompt, model, timeout):
+    def __init__(self, prompt: str, model: str, timeout: int):
         self.prompt = prompt
         self.model = model
         self.timeout = timeout
         self.client = OpenAI()
         self.processing_queue = deque()
 
-    def trigger(self, translation_task):
+    def trigger(self, translation_task: TranslationTask):
         self.processing_queue.append(translation_task)
         translation_task.start_time = datetime.utcnow()
         thread = threading.Thread(target=_translate_by_gpt,
@@ -73,7 +73,7 @@ class ParallelTranslator():
 
 class SerialTranslator():
 
-    def __init__(self, prompt, model, timeout, history_size):
+    def __init__(self, prompt: str, model: str, timeout: int, history_size: int):
         self.prompt = prompt
         self.model = model
         self.timeout = timeout

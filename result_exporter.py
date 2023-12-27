@@ -11,7 +11,7 @@ def _send_to_cqhttp(url: str, token: str, text: str):
     requests.post(url, headers=headers, data=data)
 
 
-def _sec2str(second):
+def _sec2str(second: float):
     dt = datetime.utcfromtimestamp(second)
     result = dt.strftime('%H:%M:%S')
     result += ',' + str(round(second * 10 % 10))
