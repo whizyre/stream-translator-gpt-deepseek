@@ -80,7 +80,8 @@ def cli():
     parser = argparse.ArgumentParser(description="Parameters for translator.py")
     parser.add_argument('URL',
                         type=str,
-                        help='Stream website and channel name, e.g. twitch.tv/forsen')
+                        help='The URL of the stream. '
+                        'If fill in "device", the audio will be obtained from your PC device.')
     parser.add_argument('--format',
                         type=str,
                         default='wa*',
