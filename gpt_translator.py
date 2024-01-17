@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from openai import OpenAI, APITimeoutError, APIConnectionError
 
-from common import TranslationTask
+from common import TranslationTask, LoopWorkerBase
 
 
 def _translate_by_gpt(client: OpenAI,
@@ -35,7 +35,7 @@ def _translate_by_gpt(client: OpenAI,
         print(e)
 
 
-class ParallelTranslator():
+class ParallelTranslator(LoopWorkerBase):
 
     def __init__(self, prompt: str, model: str, timeout: int):
         self.prompt = prompt
@@ -63,7 +63,7 @@ class ParallelTranslator():
                 print("Translation timeout or failed: {}".format(task.transcribed_text))
         return results
 
-    def work(self, input_queue: queue.SimpleQueue[TranslationTask],
+    def loop(self, input_queue: queue.SimpleQueue[TranslationTask],
              output_queue: queue.SimpleQueue[TranslationTask]):
         while True:
             if not input_queue.empty():
@@ -75,7 +75,7 @@ class ParallelTranslator():
             time.sleep(0.1)
 
 
-class SerialTranslator():
+class SerialTranslator(LoopWorkerBase):
 
     def __init__(self, prompt: str, model: str, timeout: int, history_size: int):
         self.prompt = prompt
@@ -85,7 +85,7 @@ class SerialTranslator():
         self.client = OpenAI()
         self.history_messages = []
 
-    def work(self, input_queue: queue.SimpleQueue[TranslationTask],
+    def loop(self, input_queue: queue.SimpleQueue[TranslationTask],
              output_queue: queue.SimpleQueue[TranslationTask]):
         current_task = None
         while True:

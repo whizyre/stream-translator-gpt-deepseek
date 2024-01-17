@@ -2,7 +2,7 @@ import queue
 import requests
 from datetime import datetime
 
-from common import TranslationTask
+from common import TranslationTask, LoopWorkerBase
 
 
 def _send_to_cqhttp(url: str, token: str, text: str):
@@ -18,14 +18,14 @@ def _sec2str(second: float):
     return result
 
 
-class ResultExporter():
+class ResultExporter(LoopWorkerBase):
 
     def __init__(self, output_timestamps: bool, cqhttp_url: str, cqhttp_token: str) -> None:
         self.output_timestamps = output_timestamps
         self.cqhttp_url = cqhttp_url
         self.cqhttp_token = cqhttp_token
 
-    def work(self, input_queue: queue.SimpleQueue[TranslationTask]):
+    def loop(self, input_queue: queue.SimpleQueue[TranslationTask]):
         while True:
             task = input_queue.get()
             timestamp_text = '{} --> {}'.format(_sec2str(task.time_range[0]),

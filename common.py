@@ -1,4 +1,5 @@
 import numpy as np
+from abc import ABC, abstractmethod
 from whisper.audio import SAMPLE_RATE
 
 
@@ -10,3 +11,20 @@ class TranslationTask:
         self.translated_text = None
         self.time_range = time_range
         self.start_time = None
+
+
+def _auto_args(func, kwargs):
+    names = func.__code__.co_varnames
+    return {k: v for k, v in kwargs.items() if k in names}
+
+
+class LoopWorkerBase(ABC):
+
+    @abstractmethod
+    def loop(self):
+        pass
+    
+    @classmethod
+    def work(cls, **kwargs):
+        obj = cls(**_auto_args(cls.__init__, kwargs))
+        obj.loop(**_auto_args(obj.loop, kwargs))

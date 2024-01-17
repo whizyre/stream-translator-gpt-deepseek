@@ -4,7 +4,7 @@ import warnings
 
 import numpy as np
 
-from common import TranslationTask, SAMPLE_RATE
+from common import TranslationTask, SAMPLE_RATE, LoopWorkerBase
 
 warnings.filterwarnings("ignore")
 
@@ -34,7 +34,7 @@ class VAD:
         self.model.reset_states()
 
 
-class AudioSlicer:
+class AudioSlicer(LoopWorkerBase):
 
     def __init__(self, frame_duration: float, continuous_no_speech_threshold: float,
                  min_audio_length: float, max_audio_length: float, prefix_retention_length: float,
@@ -94,7 +94,7 @@ class AudioSlicer:
         self.last_slice_second = slice_second
         return concatenate_audio, (last_slice_second, slice_second)
 
-    def work(self, input_queue: queue.SimpleQueue[np.array],
+    def loop(self, input_queue: queue.SimpleQueue[np.array],
              output_queue: queue.SimpleQueue[TranslationTask]):
         while True:
             audio = input_queue.get()

@@ -7,7 +7,7 @@ import threading
 import ffmpeg
 import numpy as np
 
-from common import SAMPLE_RATE
+from common import SAMPLE_RATE, LoopWorkerBase
 
 
 def _transport(ytdlp_proc, ffmpeg_proc):
@@ -56,7 +56,7 @@ def _open_stream(url: str, direct_url: bool, format: str, cookies: str):
     return ffmpeg_process, ytdlp_process
 
 
-class StreamAudioGetter():
+class StreamAudioGetter(LoopWorkerBase):
 
     def __init__(self, url: str, direct_url: bool, format: str, cookies: str,
                  frame_duration: float):
@@ -72,7 +72,7 @@ class StreamAudioGetter():
             self.ytdlp_process.kill()
         sys.exit(0)
 
-    def work(self, output_queue: queue.SimpleQueue[np.array]):
+    def loop(self, output_queue: queue.SimpleQueue[np.array]):
         while self.ffmpeg_process.poll() is None:
             in_bytes = self.ffmpeg_process.stdout.read(self.byte_size)
             if not in_bytes:
@@ -87,7 +87,7 @@ class StreamAudioGetter():
             self.ytdlp_process.kill()
 
 
-class DeviceAudioGetter():
+class DeviceAudioGetter(LoopWorkerBase):
 
     def __init__(self, device_index: int, frame_duration: float) -> None:
         import sounddevice as sd
@@ -97,7 +97,7 @@ class DeviceAudioGetter():
         self.frame_duration = frame_duration
         print("Recording device: {}".format(sd.query_devices(sd.default.device[0])['name']))
 
-    def work(self, output_queue: queue.SimpleQueue[np.array]):
+    def loop(self, output_queue: queue.SimpleQueue[np.array]):
         import sounddevice as sd
         while True:
             audio = sd.rec(frames=round(SAMPLE_RATE * self.frame_duration),
