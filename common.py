@@ -23,7 +23,7 @@ class LoopWorkerBase(ABC):
     @abstractmethod
     def loop(self):
         pass
-    
+
     @classmethod
     def work(cls, **kwargs):
         obj = cls(**_auto_args(cls.__init__, kwargs))

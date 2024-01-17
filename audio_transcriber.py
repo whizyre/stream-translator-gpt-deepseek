@@ -30,7 +30,10 @@ class OpenaiWhisper(LoopWorkerBase):
         self.language = language
 
     def transcribe(self, audio: np.array, **transcribe_options) -> str:
-        result = self.model.transcribe(audio, without_timestamps=True, language=self.language, **transcribe_options)
+        result = self.model.transcribe(audio,
+                                       without_timestamps=True,
+                                       language=self.language,
+                                       **transcribe_options)
         return result.get("text")
 
     def loop(self, input_queue: queue.SimpleQueue[TranslationTask],
@@ -74,7 +77,8 @@ class RemoteOpenaiWhisper(OpenaiWhisper):
         with open(TEMP_AUDIO_FILE_NAME, 'wb') as audio_file:
             write_audio(audio_file, SAMPLE_RATE, audio)
         with open(TEMP_AUDIO_FILE_NAME, 'rb') as audio_file:
-            result = self.client.audio.transcriptions.create(
-                model="whisper-1", file=audio_file, language=self.language).text
+            result = self.client.audio.transcriptions.create(model="whisper-1",
+                                                             file=audio_file,
+                                                             language=self.language).text
         os.remove(TEMP_AUDIO_FILE_NAME)
         return result

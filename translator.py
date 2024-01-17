@@ -20,10 +20,10 @@ def _start_daemon_thread(func, *args, **kwargs):
 
 def main(url, format, direct_url, cookies, device_index, frame_duration,
          continuous_no_speech_threshold, min_audio_length, max_audio_length,
-         prefix_retention_length, vad_threshold, model, language, use_faster_whisper, use_whisper_api,
-         whisper_filters, output_timestamps, gpt_translation_prompt, gpt_translation_history_size,
-         openai_api_key, gpt_model, gpt_translation_timeout, cqhttp_url, cqhttp_token,
-         **transcribe_options):
+         prefix_retention_length, vad_threshold, model, language, use_faster_whisper,
+         use_whisper_api, whisper_filters, output_timestamps, gpt_translation_prompt,
+         gpt_translation_history_size, openai_api_key, gpt_model, gpt_translation_timeout,
+         cqhttp_url, cqhttp_token, **transcribe_options):
 
     if openai_api_key:
         os.environ['OPENAI_API_KEY'] = openai_api_key
@@ -34,29 +34,70 @@ def main(url, format, direct_url, cookies, device_index, frame_duration,
     translator_to_exporter_queue = queue.SimpleQueue(
     ) if gpt_translation_prompt else transcriber_to_translator_queue
 
-    _start_daemon_thread(ResultExporter.work, output_timestamps=output_timestamps, cqhttp_url=cqhttp_url, cqhttp_token=cqhttp_token, input_queue=translator_to_exporter_queue)
+    _start_daemon_thread(ResultExporter.work,
+                         output_timestamps=output_timestamps,
+                         cqhttp_url=cqhttp_url,
+                         cqhttp_token=cqhttp_token,
+                         input_queue=translator_to_exporter_queue)
     if gpt_translation_prompt:
         if gpt_translation_history_size == 0:
-            _start_daemon_thread(ParallelTranslator.work, prompt=gpt_translation_prompt, model=gpt_model, timeout=gpt_translation_timeout,
-                                 input_queue=transcriber_to_translator_queue, output_queue=translator_to_exporter_queue)
+            _start_daemon_thread(ParallelTranslator.work,
+                                 prompt=gpt_translation_prompt,
+                                 model=gpt_model,
+                                 timeout=gpt_translation_timeout,
+                                 input_queue=transcriber_to_translator_queue,
+                                 output_queue=translator_to_exporter_queue)
         else:
-            _start_daemon_thread(SerialTranslator.work, prompt=gpt_translation_prompt, model=gpt_model, timeout=gpt_translation_timeout, history_size=gpt_translation_history_size,
-                                 input_queue=transcriber_to_translator_queue, output_queue=translator_to_exporter_queue)
+            _start_daemon_thread(SerialTranslator.work,
+                                 prompt=gpt_translation_prompt,
+                                 model=gpt_model,
+                                 timeout=gpt_translation_timeout,
+                                 history_size=gpt_translation_history_size,
+                                 input_queue=transcriber_to_translator_queue,
+                                 output_queue=translator_to_exporter_queue)
     if use_faster_whisper:
-        _start_daemon_thread(FasterWhisper.work, model=model, language=language, input_queue=slicer_to_transcriber_queue,
-                             output_queue=transcriber_to_translator_queue, whisper_filters=whisper_filters, **transcribe_options)
+        _start_daemon_thread(FasterWhisper.work,
+                             model=model,
+                             language=language,
+                             input_queue=slicer_to_transcriber_queue,
+                             output_queue=transcriber_to_translator_queue,
+                             whisper_filters=whisper_filters,
+                             **transcribe_options)
     elif use_whisper_api:
-        _start_daemon_thread(RemoteOpenaiWhisper.work, language=language, input_queue=slicer_to_transcriber_queue,
-                             output_queue=transcriber_to_translator_queue, whisper_filters=whisper_filters, **transcribe_options)
+        _start_daemon_thread(RemoteOpenaiWhisper.work,
+                             language=language,
+                             input_queue=slicer_to_transcriber_queue,
+                             output_queue=transcriber_to_translator_queue,
+                             whisper_filters=whisper_filters,
+                             **transcribe_options)
     else:
-        _start_daemon_thread(OpenaiWhisper.work, model=model, language=language, input_queue=slicer_to_transcriber_queue,
-                             output_queue=transcriber_to_translator_queue, whisper_filters=whisper_filters, **transcribe_options)
-    _start_daemon_thread(AudioSlicer.work, frame_duration=frame_duration, continuous_no_speech_threshold=continuous_no_speech_threshold, min_audio_length=min_audio_length,
-                               max_audio_length=max_audio_length, prefix_retention_length=prefix_retention_length, vad_threshold=vad_threshold, input_queue=getter_to_slicer_queue, output_queue=slicer_to_transcriber_queue)
+        _start_daemon_thread(OpenaiWhisper.work,
+                             model=model,
+                             language=language,
+                             input_queue=slicer_to_transcriber_queue,
+                             output_queue=transcriber_to_translator_queue,
+                             whisper_filters=whisper_filters,
+                             **transcribe_options)
+    _start_daemon_thread(AudioSlicer.work,
+                         frame_duration=frame_duration,
+                         continuous_no_speech_threshold=continuous_no_speech_threshold,
+                         min_audio_length=min_audio_length,
+                         max_audio_length=max_audio_length,
+                         prefix_retention_length=prefix_retention_length,
+                         vad_threshold=vad_threshold,
+                         input_queue=getter_to_slicer_queue,
+                         output_queue=slicer_to_transcriber_queue)
     if url.lower() == 'device':
-        DeviceAudioGetter.work(device_index=device_index, frame_duration=frame_duration, output_queue=getter_to_slicer_queue)
+        DeviceAudioGetter.work(device_index=device_index,
+                               frame_duration=frame_duration,
+                               output_queue=getter_to_slicer_queue)
     else:
-        StreamAudioGetter.work(url=url, direct_url=direct_url, format=format, cookies=cookies, frame_duration=frame_duration, output_queue=getter_to_slicer_queue)
+        StreamAudioGetter.work(url=url,
+                               direct_url=direct_url,
+                               format=format,
+                               cookies=cookies,
+                               frame_duration=frame_duration,
+                               output_queue=getter_to_slicer_queue)
 
     # Wait for others process finish.
     while (not getter_to_slicer_queue.empty() or not slicer_to_transcriber_queue.empty() or
