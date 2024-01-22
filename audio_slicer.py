@@ -6,7 +6,7 @@ import numpy as np
 
 from common import TranslationTask, SAMPLE_RATE, LoopWorkerBase
 
-warnings.filterwarnings("ignore")
+warnings.filterwarnings('ignore')
 
 
 def _init_jit_model(model_path: str, device=torch.device('cpu')):
@@ -19,14 +19,14 @@ def _init_jit_model(model_path: str, device=torch.device('cpu')):
 class VAD:
 
     def __init__(self):
-        self.model = _init_jit_model("silero_vad.jit")
+        self.model = _init_jit_model('silero_vad.jit')
 
     def is_speech(self, audio: np.array, threshold: float = 0.5, sampling_rate: int = 16000):
         if not torch.is_tensor(audio):
             try:
                 audio = torch.Tensor(audio)
             except:
-                raise TypeError("Audio cannot be casted to tensor. Cast it manually")
+                raise TypeError('Audio cannot be casted to tensor. Cast it manually')
         speech_prob = self.model(audio, sampling_rate).item()
         return speech_prob >= threshold
 

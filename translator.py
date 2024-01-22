@@ -114,11 +114,11 @@ def main(url, format, direct_url, cookies, device_index, frame_duration,
     while (not getter_to_slicer_queue.empty() or not slicer_to_transcriber_queue.empty() or
            not transcriber_to_translator_queue.empty() or not translator_to_exporter_queue.empty()):
         time.sleep(5)
-    print("Stream ended")
+    print('Stream ended')
 
 
 def cli():
-    parser = argparse.ArgumentParser(description="Parameters for translator.py")
+    parser = argparse.ArgumentParser(description='Parameters for translator.py')
     parser.add_argument('URL',
                         type=str,
                         help='The URL of the stream. '
@@ -226,7 +226,7 @@ def cli():
     parser.add_argument(
         '--gpt_model',
         type=str,
-        default="gpt-3.5-turbo",
+        default='gpt-3.5-turbo',
         help='GPT model name, gpt-3.5-turbo or gpt-4. (If using Gemini, not need to change this)')
     parser.add_argument(
         '--gpt_translation_prompt',
@@ -257,34 +257,34 @@ def cli():
                         'it does not need to fill in.')
 
     args = parser.parse_args().__dict__
-    url = args.pop("URL")
+    url = args.pop('URL')
 
     if args['model'].endswith('.en'):
         if args['model'] == 'large.en':
             print(
-                "English model does not have large model, please choose from {tiny.en, small.en, medium.en}"
+                'English model does not have large model, please choose from {tiny.en, small.en, medium.en}'
             )
             sys.exit(0)
         if args['language'] != 'English' and args['language'] != 'en':
             if args['language'] == 'auto':
-                print("Using .en model, setting language from auto to English")
+                print('Using .en model, setting language from auto to English')
                 args['language'] = 'en'
             else:
                 print(
-                    "English model cannot be used to detect non english language, please choose a non .en model"
+                    'English model cannot be used to detect non english language, please choose a non .en model'
                 )
                 sys.exit(0)
 
     if args['use_faster_whisper'] and args['use_whisper_api']:
-        print("Cannot use Faster Whisper and Whisper API at the same time")
+        print('Cannot use Faster Whisper and Whisper API at the same time')
         sys.exit(0)
 
     if args['use_whisper_api'] and not args['openai_api_key']:
-        print("Please fill in the OpenAI API key when enabling Whisper API")
+        print('Please fill in the OpenAI API key when enabling Whisper API')
         sys.exit(0)
 
     if args['gpt_translation_prompt'] and not (args['openai_api_key'] or args['google_api_key']):
-        print("Please fill in the OpenAI / Google API key when enabling LLM translation")
+        print('Please fill in the OpenAI / Google API key when enabling LLM translation')
         sys.exit(0)
 
     if args['language'] == 'auto':

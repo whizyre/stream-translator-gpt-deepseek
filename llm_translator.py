@@ -14,12 +14,12 @@ from common import TranslationTask, LoopWorkerBase
 class LLMClint():
 
     class LLM_TYPE:
-        GPT = "GPT"
-        GEMINI = "Gemini"
+        GPT = 'GPT'
+        GEMINI = 'Gemini'
 
     def __init__(self, llm_type: str, model: str, prompt: str, history_size: int) -> None:
         if llm_type not in (self.LLM_TYPE.GPT, self.LLM_TYPE.GEMINI):
-            raise ValueError("Unknow LLM type: {}".format(llm_type))
+            raise ValueError('Unknow LLM type: {}'.format(llm_type))
         self.llm_type = llm_type
         self.model = model
         self.prompt = prompt
@@ -30,11 +30,11 @@ class LLMClint():
         if not user_content or not assistant_content:
             return
         self.history_messages.extend([{
-            "role": "user",
-            "content": user_content
+            'role': 'user',
+            'content': user_content
         }, {
-            "role": "assistant",
-            "content": assistant_content
+            'role': 'assistant',
+            'content': assistant_content
         }])
         while (len(self.history_messages) > self.history_size * 2):
             self.history_messages.pop(0)
@@ -42,11 +42,11 @@ class LLMClint():
     def _translate_by_gpt(self, translation_task: TranslationTask):
         # https://platform.openai.com/docs/api-reference/chat/create?lang=python
         client = OpenAI()
-        system_prompt = "You are a translation engine."
-        messages = [{"role": "system", "content": system_prompt}]
+        system_prompt = 'You are a translation engine.'
+        messages = [{'role': 'system', 'content': system_prompt}]
         messages.extend(self.history_messages)
-        user_content = "{}: \n{}".format(self.prompt, translation_task.transcribed_text)
-        messages.append({"role": "user", "content": user_content})
+        user_content = '{}: \n{}'.format(self.prompt, translation_task.transcribed_text)
+        messages.append({'role': 'user', 'content': user_content})
         try:
             completion = client.chat.completions.create(
                 model=self.model,
@@ -69,10 +69,10 @@ class LLMClint():
         gemini_messages = []
         for gpt_message in gpt_messages:
             gemini_message = {}
-            gemini_message["role"] = gpt_message["role"]
-            if gemini_message["role"] == "assistant":
-                gemini_message["role"] = "model"
-            gemini_message["parts"] = [gpt_message["content"]]
+            gemini_message['role'] = gpt_message['role']
+            if gemini_message['role'] == 'assistant':
+                gemini_message['role'] = 'model'
+            gemini_message['parts'] = [gpt_message['content']]
             gemini_messages.append(gemini_message)
         return gemini_messages
 
@@ -80,8 +80,8 @@ class LLMClint():
         # https://ai.google.dev/tutorials/python_quickstart
         client = genai.GenerativeModel(self.model)
         messages = self._gpt_to_gemini(self.history_messages)
-        user_content = "{}: \n{}".format(self.prompt, translation_task.transcribed_text)
-        messages.append({"role": "user", "parts": [user_content]})
+        user_content = '{}: \n{}'.format(self.prompt, translation_task.transcribed_text)
+        messages.append({'role': 'user', 'parts': [user_content]})
         config = genai.types.GenerationConfig(candidate_count=1, temperature=0)
         try:
             response = client.generate_content(messages, generation_config=config)
@@ -98,7 +98,7 @@ class LLMClint():
         elif self.llm_type == self.LLM_TYPE.GEMINI:
             self._translate_gy_gemini(translation_task)
         else:
-            raise ValueError("Unknow LLM type: {}".format(self.llm_type))
+            raise ValueError('Unknow LLM type: {}'.format(self.llm_type))
 
 
 class ParallelTranslator(LoopWorkerBase):
@@ -125,7 +125,7 @@ class ParallelTranslator(LoopWorkerBase):
             task = self.processing_queue.popleft()
             results.append(task)
             if not task.translated_text:
-                print("Translation timeout or failed: {}".format(task.transcribed_text))
+                print('Translation timeout or failed: {}'.format(task.transcribed_text))
         return results
 
     def loop(self, input_queue: queue.SimpleQueue[TranslationTask],
@@ -154,7 +154,7 @@ class SerialTranslator(LoopWorkerBase):
                 if (current_task.translated_text or datetime.utcnow() - current_task.start_time
                         > timedelta(seconds=self.timeout)):
                     if not current_task.translated_text:
-                        print("Translation timeout or failed: {}".format(
+                        print('Translation timeout or failed: {}'.format(
                             current_task.transcribed_text))
                     output_queue.put(current_task)
                     current_task = None

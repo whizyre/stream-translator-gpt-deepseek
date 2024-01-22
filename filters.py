@@ -18,8 +18,8 @@ def japanese_stream_filter(text: str):
 
     for filter_text in ['エンディング', '字幕作成', 'この動画の字幕']:
         if filter_text in text:
-            print("filter", text)
-            return ""
+            print('filter', text)
+            return ''
 
     if len(text) < 3:
         return ''

@@ -24,7 +24,7 @@ def _filter_text(text: str, whisper_filters: str):
 class OpenaiWhisper(LoopWorkerBase):
 
     def __init__(self, model: str, language: str) -> None:
-        print("Loading whisper model: {}".format(model))
+        print('Loading whisper model: {}'.format(model))
         import whisper
         self.model = whisper.load_model(model)
         self.language = language
@@ -34,7 +34,7 @@ class OpenaiWhisper(LoopWorkerBase):
                                        without_timestamps=True,
                                        language=self.language,
                                        **transcribe_options)
-        return result.get("text")
+        return result.get('text')
 
     def loop(self, input_queue: queue.SimpleQueue[TranslationTask],
              output_queue: queue.SimpleQueue[TranslationTask], whisper_filters,
@@ -53,14 +53,14 @@ class OpenaiWhisper(LoopWorkerBase):
 class FasterWhisper(OpenaiWhisper):
 
     def __init__(self, model: str, language: str) -> None:
-        print("Loading faster-whisper model: {}".format(model))
+        print('Loading faster-whisper model: {}'.format(model))
         from faster_whisper import WhisperModel
         self.model = WhisperModel(model)
         self.language = language
 
     def transcribe(self, audio: np.array, **transcribe_options) -> str:
         segments, info = self.model.transcribe(audio, language=self.language, **transcribe_options)
-        transcribed_text = ""
+        transcribed_text = ''
         for segment in segments:
             transcribed_text += segment.text
         return transcribed_text
@@ -77,7 +77,7 @@ class RemoteOpenaiWhisper(OpenaiWhisper):
         with open(TEMP_AUDIO_FILE_NAME, 'wb') as audio_file:
             write_audio(audio_file, SAMPLE_RATE, audio)
         with open(TEMP_AUDIO_FILE_NAME, 'rb') as audio_file:
-            result = self.client.audio.transcriptions.create(model="whisper-1",
+            result = self.client.audio.transcriptions.create(model='whisper-1',
                                                              file=audio_file,
                                                              language=self.language).text
         os.remove(TEMP_AUDIO_FILE_NAME)
