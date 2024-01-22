@@ -5,10 +5,12 @@ import sys
 import threading
 import time
 
+import google.generativeai as genai
+
 from audio_getter import StreamAudioGetter, DeviceAudioGetter
 from audio_slicer import AudioSlicer
 from audio_transcriber import OpenaiWhisper, FasterWhisper, RemoteOpenaiWhisper
-from gpt_translator import ParallelTranslator, SerialTranslator
+from llm_translator import LLMClint, ParallelTranslator, SerialTranslator
 from result_exporter import ResultExporter
 
 
@@ -22,11 +24,13 @@ def main(url, format, direct_url, cookies, device_index, frame_duration,
          continuous_no_speech_threshold, min_audio_length, max_audio_length,
          prefix_retention_length, vad_threshold, model, language, use_faster_whisper,
          use_whisper_api, whisper_filters, output_timestamps, gpt_translation_prompt,
-         gpt_translation_history_size, openai_api_key, gpt_model, gpt_translation_timeout,
+         gpt_translation_history_size, openai_api_key, google_api_key, gpt_model, gpt_translation_timeout,
          cqhttp_url, cqhttp_token, **transcribe_options):
 
     if openai_api_key:
         os.environ['OPENAI_API_KEY'] = openai_api_key
+    if google_api_key:
+        genai.configure(api_key=google_api_key)
 
     getter_to_slicer_queue = queue.SimpleQueue()
     slicer_to_transcriber_queue = queue.SimpleQueue()
@@ -40,19 +44,20 @@ def main(url, format, direct_url, cookies, device_index, frame_duration,
                          cqhttp_token=cqhttp_token,
                          input_queue=translator_to_exporter_queue)
     if gpt_translation_prompt:
+        if google_api_key:
+            llm_client = LLMClint(llm_type=LLMClint.LLM_TYPE.GEMINI, model='gemini-pro', prompt=gpt_translation_prompt, history_size=gpt_translation_history_size)
+        else:
+            llm_client = LLMClint(llm_type=LLMClint.LLM_TYPE.GPT, model=gpt_model, prompt=gpt_translation_prompt, history_size=gpt_translation_history_size)
         if gpt_translation_history_size == 0:
             _start_daemon_thread(ParallelTranslator.work,
-                                 prompt=gpt_translation_prompt,
-                                 model=gpt_model,
+                                 llm_client=llm_client,
                                  timeout=gpt_translation_timeout,
                                  input_queue=transcriber_to_translator_queue,
                                  output_queue=translator_to_exporter_queue)
         else:
             _start_daemon_thread(SerialTranslator.work,
-                                 prompt=gpt_translation_prompt,
-                                 model=gpt_model,
+                                 llm_client=llm_client,
                                  timeout=gpt_translation_timeout,
-                                 history_size=gpt_translation_history_size,
                                  input_queue=transcriber_to_translator_queue,
                                  output_queue=translator_to_exporter_queue)
     if use_faster_whisper:
@@ -208,25 +213,29 @@ def cli():
                         type=str,
                         default=None,
                         help='OpenAI API key if using GPT translation / Whisper API.')
+    parser.add_argument('--google_api_key',
+                        type=str,
+                        default=None,
+                        help='Google API key if using Gemini translation.')
+    parser.add_argument('--gpt_model',
+                        type=str,
+                        default="gpt-3.5-turbo",
+                        help='GPT model name, gpt-3.5-turbo or gpt-4. (If using Gemini, not need to change this)')
     parser.add_argument('--gpt_translation_prompt',
                         type=str,
                         default=None,
-                        help='If set, will translate result text to target language via GPT API. '
+                        help='If set, will translate result text to target language via GPT / Gemini API. '
                         'Example: \"Translate from Japanese to Chinese\"')
     parser.add_argument('--gpt_translation_history_size',
                         type=int,
                         default=0,
-                        help='The number of previous messages sent when calling the GPT API. '
-                        'If the history size is 0, the GPT API will be called parallelly. '
-                        'If the history size > 0, the GPT API will be called serially.')
-    parser.add_argument('--gpt_model',
-                        type=str,
-                        default="gpt-3.5-turbo",
-                        help='GPT model name, gpt-3.5-turbo or gpt-4')
+                        help='The number of previous messages sent when calling the GPT / Gemini API. '
+                        'If the history size is 0, the translation will be run parallelly. '
+                        'If the history size > 0, the translation will be run serially.')
     parser.add_argument('--gpt_translation_timeout',
                         type=int,
                         default=15,
-                        help='If the ChatGPT translation exceeds this number of seconds, '
+                        help='If the GPT / Gemini translation exceeds this number of seconds, '
                         'the translation will be discarded.')
     parser.add_argument('--cqhttp_url',
                         type=str,
@@ -261,8 +270,12 @@ def cli():
         print("Cannot use Faster Whisper and Whisper API at the same time")
         sys.exit(0)
 
-    if (args['use_whisper_api'] or args['gpt_translation_prompt']) and not args['openai_api_key']:
-        print("Please fill in the OpenAI API key when enabling GPT translation or Whisper API")
+    if args['use_whisper_api'] and not args['openai_api_key']:
+        print("Please fill in the OpenAI API key when enabling Whisper API")
+        sys.exit(0)
+    
+    if args['gpt_translation_prompt'] and not (args['openai_api_key'] or args['google_api_key']):
+        print("Please fill in the OpenAI / Google API key when enabling LLM translation")
         sys.exit(0)
 
     if args['language'] == 'auto':
