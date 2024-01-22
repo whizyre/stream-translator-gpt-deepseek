@@ -24,8 +24,8 @@ def main(url, format, direct_url, cookies, device_index, frame_duration,
          continuous_no_speech_threshold, min_audio_length, max_audio_length,
          prefix_retention_length, vad_threshold, model, language, use_faster_whisper,
          use_whisper_api, whisper_filters, output_timestamps, gpt_translation_prompt,
-         gpt_translation_history_size, openai_api_key, google_api_key, gpt_model, gpt_translation_timeout,
-         cqhttp_url, cqhttp_token, **transcribe_options):
+         gpt_translation_history_size, openai_api_key, google_api_key, gpt_model,
+         gpt_translation_timeout, cqhttp_url, cqhttp_token, **transcribe_options):
 
     if openai_api_key:
         os.environ['OPENAI_API_KEY'] = openai_api_key
@@ -45,9 +45,15 @@ def main(url, format, direct_url, cookies, device_index, frame_duration,
                          input_queue=translator_to_exporter_queue)
     if gpt_translation_prompt:
         if google_api_key:
-            llm_client = LLMClint(llm_type=LLMClint.LLM_TYPE.GEMINI, model='gemini-pro', prompt=gpt_translation_prompt, history_size=gpt_translation_history_size)
+            llm_client = LLMClint(llm_type=LLMClint.LLM_TYPE.GEMINI,
+                                  model='gemini-pro',
+                                  prompt=gpt_translation_prompt,
+                                  history_size=gpt_translation_history_size)
         else:
-            llm_client = LLMClint(llm_type=LLMClint.LLM_TYPE.GPT, model=gpt_model, prompt=gpt_translation_prompt, history_size=gpt_translation_history_size)
+            llm_client = LLMClint(llm_type=LLMClint.LLM_TYPE.GPT,
+                                  model=gpt_model,
+                                  prompt=gpt_translation_prompt,
+                                  history_size=gpt_translation_history_size)
         if gpt_translation_history_size == 0:
             _start_daemon_thread(ParallelTranslator.work,
                                  llm_client=llm_client,
@@ -217,21 +223,24 @@ def cli():
                         type=str,
                         default=None,
                         help='Google API key if using Gemini translation.')
-    parser.add_argument('--gpt_model',
-                        type=str,
-                        default="gpt-3.5-turbo",
-                        help='GPT model name, gpt-3.5-turbo or gpt-4. (If using Gemini, not need to change this)')
-    parser.add_argument('--gpt_translation_prompt',
-                        type=str,
-                        default=None,
-                        help='If set, will translate result text to target language via GPT / Gemini API. '
-                        'Example: \"Translate from Japanese to Chinese\"')
-    parser.add_argument('--gpt_translation_history_size',
-                        type=int,
-                        default=0,
-                        help='The number of previous messages sent when calling the GPT / Gemini API. '
-                        'If the history size is 0, the translation will be run parallelly. '
-                        'If the history size > 0, the translation will be run serially.')
+    parser.add_argument(
+        '--gpt_model',
+        type=str,
+        default="gpt-3.5-turbo",
+        help='GPT model name, gpt-3.5-turbo or gpt-4. (If using Gemini, not need to change this)')
+    parser.add_argument(
+        '--gpt_translation_prompt',
+        type=str,
+        default=None,
+        help='If set, will translate result text to target language via GPT / Gemini API. '
+        'Example: \"Translate from Japanese to Chinese\"')
+    parser.add_argument(
+        '--gpt_translation_history_size',
+        type=int,
+        default=0,
+        help='The number of previous messages sent when calling the GPT / Gemini API. '
+        'If the history size is 0, the translation will be run parallelly. '
+        'If the history size > 0, the translation will be run serially.')
     parser.add_argument('--gpt_translation_timeout',
                         type=int,
                         default=15,
@@ -273,7 +282,7 @@ def cli():
     if args['use_whisper_api'] and not args['openai_api_key']:
         print("Please fill in the OpenAI API key when enabling Whisper API")
         sys.exit(0)
-    
+
     if args['gpt_translation_prompt'] and not (args['openai_api_key'] or args['google_api_key']):
         print("Please fill in the OpenAI / Google API key when enabling LLM translation")
         sys.exit(0)

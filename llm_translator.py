@@ -25,16 +25,21 @@ class LLMClint():
         self.prompt = prompt
         self.history_size = history_size
         self.history_messages = []
-    
+
     def _append_history_message(self, user_content: str, assistant_content: str):
         if not user_content or not assistant_content:
             return
-        self.history_messages.extend([{"role": "user", "content": user_content}, {"role": "assistant", "content": assistant_content}])
+        self.history_messages.extend([{
+            "role": "user",
+            "content": user_content
+        }, {
+            "role": "assistant",
+            "content": assistant_content
+        }])
         while (len(self.history_messages) > self.history_size * 2):
             self.history_messages.pop(0)
 
-    def _translate_by_gpt(self,
-                          translation_task: TranslationTask):
+    def _translate_by_gpt(self, translation_task: TranslationTask):
         # https://platform.openai.com/docs/api-reference/chat/create?lang=python
         client = OpenAI()
         system_prompt = "You are a translation engine."
@@ -58,7 +63,7 @@ class LLMClint():
             return
         if self.history_size:
             self._append_history_message(user_content, translation_task.translated_text)
-    
+
     @staticmethod
     def _gpt_to_gemini(gpt_messages: list):
         gemini_messages = []
@@ -71,16 +76,13 @@ class LLMClint():
             gemini_messages.append(gemini_message)
         return gemini_messages
 
-    def _translate_gy_gemini(self,
-                             translation_task: TranslationTask):
+    def _translate_gy_gemini(self, translation_task: TranslationTask):
         # https://ai.google.dev/tutorials/python_quickstart
         client = genai.GenerativeModel(self.model)
         messages = self._gpt_to_gemini(self.history_messages)
         user_content = "{}: \n{}".format(self.prompt, translation_task.transcribed_text)
         messages.append({"role": "user", "parts": [user_content]})
-        config = genai.types.GenerationConfig(
-                candidate_count=1,
-                temperature=0)
+        config = genai.types.GenerationConfig(candidate_count=1, temperature=0)
         try:
             response = client.generate_content(messages, generation_config=config)
             translation_task.translated_text = response.text
@@ -89,7 +91,7 @@ class LLMClint():
             return
         if self.history_size:
             self._append_history_message(user_content, translation_task.translated_text)
-    
+
     def translate(self, translation_task: TranslationTask):
         if self.llm_type == self.LLM_TYPE.GPT:
             self._translate_by_gpt(translation_task)
@@ -103,7 +105,7 @@ class ParallelTranslator(LoopWorkerBase):
 
     PARALLEL_MAX_NUMBER = 10
 
-    def __init__(self, llm_client : LLMClint, timeout: int):
+    def __init__(self, llm_client: LLMClint, timeout: int):
         self.llm_client = llm_client
         self.timeout = timeout
         self.processing_queue = deque()
@@ -111,8 +113,7 @@ class ParallelTranslator(LoopWorkerBase):
     def trigger(self, translation_task: TranslationTask):
         self.processing_queue.append(translation_task)
         translation_task.start_time = datetime.utcnow()
-        thread = threading.Thread(target=self.llm_client.translate,
-                                  args=(translation_task,))
+        thread = threading.Thread(target=self.llm_client.translate, args=(translation_task,))
         thread.daemon = True
         thread.start()
 
@@ -141,7 +142,7 @@ class ParallelTranslator(LoopWorkerBase):
 
 class SerialTranslator(LoopWorkerBase):
 
-    def __init__(self, llm_client : LLMClint, timeout: int):
+    def __init__(self, llm_client: LLMClint, timeout: int):
         self.llm_client = llm_client
         self.timeout = timeout
 
@@ -161,8 +162,7 @@ class SerialTranslator(LoopWorkerBase):
             if current_task is None and not input_queue.empty():
                 current_task = input_queue.get()
                 current_task.start_time = datetime.utcnow()
-                thread = threading.Thread(target=self.llm_client.translate,
-                                          args=(current_task,))
+                thread = threading.Thread(target=self.llm_client.translate, args=(current_task,))
                 thread.daemon = True
                 thread.start()
             time.sleep(0.1)
