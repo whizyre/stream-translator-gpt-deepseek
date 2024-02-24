@@ -97,7 +97,6 @@ class LLMClint():
             translation_task.translated_text = response.text
         except (ValueError, InternalServerError) as e:
             print(e)
-            print(response.candidates[0].finish_reason)
             return
         if self.history_size:
             self._append_history_message(user_content, translation_task.translated_text)
