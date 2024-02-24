@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 
 import google.generativeai as genai
 from google.api_core.exceptions import InternalServerError
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from openai import OpenAI, APITimeoutError, APIConnectionError
 
 from common import TranslationTask, LoopWorkerBase
@@ -83,11 +84,18 @@ class LLMClint():
         user_content = '{}: \n{}'.format(self.prompt, translation_task.transcribed_text)
         messages.append({'role': 'user', 'parts': [user_content]})
         config = genai.types.GenerationConfig(candidate_count=1, temperature=0)
+        safety_settings = {
+            HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+        }
         try:
-            response = client.generate_content(messages, generation_config=config)
+            response = client.generate_content(messages, generation_config=config, safety_settings=safety_settings)
             translation_task.translated_text = response.text
         except (ValueError, InternalServerError) as e:
             print(e)
+            print(response.candidates[0].finish_reason)
             return
         if self.history_size:
             self._append_history_message(user_content, translation_task.translated_text)
@@ -105,9 +113,10 @@ class ParallelTranslator(LoopWorkerBase):
 
     PARALLEL_MAX_NUMBER = 10
 
-    def __init__(self, llm_client: LLMClint, timeout: int):
+    def __init__(self, llm_client: LLMClint, timeout: int, retry_if_translation_fails: bool):
         self.llm_client = llm_client
         self.timeout = timeout
+        self.retry_if_translation_fails = retry_if_translation_fails
         self.processing_queue = deque()
 
     def trigger(self, translation_task: TranslationTask):
@@ -123,9 +132,14 @@ class ParallelTranslator(LoopWorkerBase):
                                          datetime.utcnow() - self.processing_queue[0].start_time
                                          > timedelta(seconds=self.timeout)):
             task = self.processing_queue.popleft()
-            results.append(task)
-            if not task.translated_text:
-                print('Translation timeout or failed: {}'.format(task.transcribed_text))
+            if task.translated_text:
+                results.append(task)
+            else:
+                if self.retry_if_translation_fails:
+                    self.trigger(task)
+                else:
+                    results.append(task)
+                    print('Translation timeout or failed: {}'.format(task.transcribed_text))
         return results
 
     def loop(self, input_queue: queue.SimpleQueue[TranslationTask],
@@ -142,9 +156,16 @@ class ParallelTranslator(LoopWorkerBase):
 
 class SerialTranslator(LoopWorkerBase):
 
-    def __init__(self, llm_client: LLMClint, timeout: int):
+    def __init__(self, llm_client: LLMClint, timeout: int, retry_if_translation_fails: bool):
         self.llm_client = llm_client
         self.timeout = timeout
+        self.retry_if_translation_fails = retry_if_translation_fails
+
+    def trigger(self, translation_task: TranslationTask):
+        translation_task.start_time = datetime.utcnow()
+        thread = threading.Thread(target=self.llm_client.translate, args=(translation_task,))
+        thread.daemon = True
+        thread.start()
 
     def loop(self, input_queue: queue.SimpleQueue[TranslationTask],
              output_queue: queue.SimpleQueue[TranslationTask]):
@@ -154,6 +175,9 @@ class SerialTranslator(LoopWorkerBase):
                 if (current_task.translated_text or datetime.utcnow() - current_task.start_time
                         > timedelta(seconds=self.timeout)):
                     if not current_task.translated_text:
+                        if self.retry_if_translation_fails:
+                            self.trigger(current_task)
+                            continue
                         print('Translation timeout or failed: {}'.format(
                             current_task.transcribed_text))
                     output_queue.put(current_task)
@@ -161,8 +185,5 @@ class SerialTranslator(LoopWorkerBase):
 
             if current_task is None and not input_queue.empty():
                 current_task = input_queue.get()
-                current_task.start_time = datetime.utcnow()
-                thread = threading.Thread(target=self.llm_client.translate, args=(current_task,))
-                thread.daemon = True
-                thread.start()
+                self.trigger(current_task)
             time.sleep(0.1)

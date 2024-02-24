@@ -4,7 +4,7 @@ more-itertools
 torch
 ffmpeg-python==0.2.0
 openai-whisper==20231117
-faster-whisper==0.10.0
+faster-whisper==0.10.1
 openai==1.6.0
 google-generativeai
 yt-dlp

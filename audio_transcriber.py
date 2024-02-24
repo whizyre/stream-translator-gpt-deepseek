@@ -37,16 +37,18 @@ class OpenaiWhisper(LoopWorkerBase):
         return result.get('text')
 
     def loop(self, input_queue: queue.SimpleQueue[TranslationTask],
-             output_queue: queue.SimpleQueue[TranslationTask], whisper_filters,
+             output_queue: queue.SimpleQueue[TranslationTask], whisper_filters: str, print_result: bool,
              **transcribe_options):
         while True:
             task = input_queue.get()
             task.transcribed_text = _filter_text(self.transcribe(task.audio, **transcribe_options),
                                                  whisper_filters).strip()
             if not task.transcribed_text:
-                print('skip...')
+                if print_result:
+                    print('skip...')
                 continue
-            print(task.transcribed_text)
+            if print_result:
+                print(task.transcribed_text)
             output_queue.put(task)
 
 

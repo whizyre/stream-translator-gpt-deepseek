@@ -59,7 +59,7 @@ def _open_stream(url: str, direct_url: bool, format: str, cookies: str):
 class StreamAudioGetter(LoopWorkerBase):
 
     def __init__(self, url: str, direct_url: bool, format: str, cookies: str,
-                 frame_duration: float):
+                 frame_duration: float) -> None:
         print('Opening stream: {}'.format(url))
         self.ffmpeg_process, self.ytdlp_process = _open_stream(url, direct_url, format, cookies)
         self.byte_size = round(frame_duration * SAMPLE_RATE *
@@ -85,6 +85,41 @@ class StreamAudioGetter(LoopWorkerBase):
         self.ffmpeg_process.kill()
         if self.ytdlp_process:
             self.ytdlp_process.kill()
+
+
+class LocalFileAudioGetter(LoopWorkerBase):
+
+    def __init__(self, file_path: str, frame_duration: float) -> None:
+        print('Opening local file: {}'.format(file_path))
+        try:
+            self.ffmpeg_process = (ffmpeg.input(file_path, loglevel='panic').output('pipe:',
+                                                                             format='s16le',
+                                                                             acodec='pcm_s16le',
+                                                                             ac=1,
+                                                                             ar=SAMPLE_RATE).run_async(
+                                                                                 pipe_stdin=True,
+                                                                                 pipe_stdout=True))
+        except ffmpeg.Error as e:
+            raise RuntimeError(f'Failed to load audio: {e.stderr.decode()}') from e
+        self.byte_size = round(frame_duration * SAMPLE_RATE *
+                               2)  # Factor 2 comes from reading the int16 stream as bytes
+        signal.signal(signal.SIGINT, self._exit_handler)
+
+    def _exit_handler(self, signum, frame):
+        self.ffmpeg_process.kill()
+        sys.exit(0)
+
+    def loop(self, output_queue: queue.SimpleQueue[np.array]):
+        while self.ffmpeg_process.poll() is None:
+            in_bytes = self.ffmpeg_process.stdout.read(self.byte_size)
+            if not in_bytes:
+                break
+            if len(in_bytes) != self.byte_size:
+                continue
+            audio = np.frombuffer(in_bytes, np.int16).flatten().astype(np.float32) / 32768.0
+            output_queue.put(audio)
+
+        self.ffmpeg_process.kill()
 
 
 class DeviceAudioGetter(LoopWorkerBase):
