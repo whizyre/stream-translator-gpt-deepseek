@@ -92,13 +92,13 @@ class LocalFileAudioGetter(LoopWorkerBase):
     def __init__(self, file_path: str, frame_duration: float) -> None:
         print('Opening local file: {}'.format(file_path))
         try:
-            self.ffmpeg_process = (ffmpeg.input(file_path, loglevel='panic').output('pipe:',
-                                                                             format='s16le',
-                                                                             acodec='pcm_s16le',
-                                                                             ac=1,
-                                                                             ar=SAMPLE_RATE).run_async(
-                                                                                 pipe_stdin=True,
-                                                                                 pipe_stdout=True))
+            self.ffmpeg_process = (ffmpeg.input(
+                file_path, loglevel='panic').output('pipe:',
+                                                    format='s16le',
+                                                    acodec='pcm_s16le',
+                                                    ac=1,
+                                                    ar=SAMPLE_RATE).run_async(pipe_stdin=True,
+                                                                              pipe_stdout=True))
         except ffmpeg.Error as e:
             raise RuntimeError(f'Failed to load audio: {e.stderr.decode()}') from e
         self.byte_size = round(frame_duration * SAMPLE_RATE *

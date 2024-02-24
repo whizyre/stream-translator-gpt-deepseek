@@ -23,9 +23,10 @@ def _start_daemon_thread(func, *args, **kwargs):
 def main(url, format, direct_url, cookies, device_index, frame_duration,
          continuous_no_speech_threshold, min_audio_length, max_audio_length,
          prefix_retention_length, vad_threshold, model, language, use_faster_whisper,
-         use_whisper_api, whisper_filters, hide_whisper_result, openai_api_key, google_api_key, gpt_translation_prompt,
-         gpt_translation_history_size, gpt_model,
-         gpt_translation_timeout, retry_if_translation_fails, output_timestamps, cqhttp_url, cqhttp_token, **transcribe_options):
+         use_whisper_api, whisper_filters, hide_whisper_result, openai_api_key, google_api_key,
+         gpt_translation_prompt, gpt_translation_history_size, gpt_model, gpt_translation_timeout,
+         retry_if_translation_fails, output_timestamps, cqhttp_url, cqhttp_token,
+         **transcribe_options):
 
     if openai_api_key:
         os.environ['OPENAI_API_KEY'] = openai_api_key
@@ -109,7 +110,9 @@ def main(url, format, direct_url, cookies, device_index, frame_duration,
                                frame_duration=frame_duration,
                                output_queue=getter_to_slicer_queue)
     elif os.path.isabs(url):
-        LocalFileAudioGetter.work(file_path=url, frame_duration=frame_duration, output_queue=getter_to_slicer_queue)
+        LocalFileAudioGetter.work(file_path=url,
+                                  frame_duration=frame_duration,
+                                  output_queue=getter_to_slicer_queue)
     else:
         StreamAudioGetter.work(url=url,
                                direct_url=direct_url,
@@ -254,9 +257,10 @@ def cli():
                         default=15,
                         help='If the GPT / Gemini translation exceeds this number of seconds, '
                         'the translation will be discarded.')
-    parser.add_argument('--retry_if_translation_fails',
-                        action='store_true',
-                        help='Retry when translation times out/fails. Used to generate subtitles offline.')
+    parser.add_argument(
+        '--retry_if_translation_fails',
+        action='store_true',
+        help='Retry when translation times out/fails. Used to generate subtitles offline.')
     parser.add_argument('--output_timestamps',
                         action='store_true',
                         help='Output the timestamp of the text when outputting the text.')

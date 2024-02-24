@@ -91,7 +91,9 @@ class LLMClint():
             HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
         }
         try:
-            response = client.generate_content(messages, generation_config=config, safety_settings=safety_settings)
+            response = client.generate_content(messages,
+                                               generation_config=config,
+                                               safety_settings=safety_settings)
             translation_task.translated_text = response.text
         except (ValueError, InternalServerError) as e:
             print(e)

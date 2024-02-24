@@ -23,7 +23,8 @@ class ResultExporter(LoopWorkerBase):
     def __init__(self) -> None:
         pass
 
-    def loop(self, input_queue: queue.SimpleQueue[TranslationTask], output_whisper_result: bool, output_timestamps: bool, cqhttp_url: str, cqhttp_token: str):
+    def loop(self, input_queue: queue.SimpleQueue[TranslationTask], output_whisper_result: bool,
+             output_timestamps: bool, cqhttp_url: str, cqhttp_token: str):
         while True:
             task = input_queue.get()
             timestamp_text = '{} --> {}'.format(_sec2str(task.time_range[0]),
