@@ -24,14 +24,14 @@ def main(url, format, direct_url, cookies, device_index, frame_duration,
          continuous_no_speech_threshold, min_audio_length, max_audio_length,
          prefix_retention_length, vad_threshold, model, language, use_faster_whisper,
          use_whisper_api, whisper_filters, hide_whisper_result, openai_api_key, google_api_key,
-         gpt_translation_prompt, gpt_translation_history_size, gpt_model, gpt_translation_timeout,
-         retry_if_translation_fails, output_timestamps, cqhttp_url, cqhttp_token,
+         gpt_translation_prompt, gpt_translation_history_size, gpt_model,gpt_translation_timeout,
+         retry_if_translation_fails, output_timestamps, cqhttp_url, cqhttp_token, gpt_base_url,
          **transcribe_options):
 
     if openai_api_key:
         os.environ['OPENAI_API_KEY'] = openai_api_key
     if google_api_key:
-        genai.configure(api_key=google_api_key)
+        genai.configure(api_key=google_api_key)        
 
     getter_to_slicer_queue = queue.SimpleQueue()
     slicer_to_transcriber_queue = queue.SimpleQueue()
@@ -55,7 +55,8 @@ def main(url, format, direct_url, cookies, device_index, frame_duration,
             llm_client = LLMClint(llm_type=LLMClint.LLM_TYPE.GPT,
                                   model=gpt_model,
                                   prompt=gpt_translation_prompt,
-                                  history_size=gpt_translation_history_size)
+                                  history_size=gpt_translation_history_size,
+                                  gpt_base_url=gpt_base_url)
         if gpt_translation_history_size == 0:
             _start_daemon_thread(ParallelTranslator.work,
                                  llm_client=llm_client,
@@ -273,6 +274,11 @@ def cli():
                         default=None,
                         help='Token of cqhttp, if it is not set on the server side, '
                         'it does not need to fill in.')
+    parser.add_argument('--gpt_base_url',
+                        type=str,
+                        default="https://api.openai.com/v1/",
+                        help='The base URL of the GPT API. '
+                        'If not set, the default URL will be used.')
 
     args = parser.parse_args().__dict__
     url = args.pop('URL')

@@ -18,7 +18,7 @@ class LLMClint():
         GPT = 'GPT'
         GEMINI = 'Gemini'
 
-    def __init__(self, llm_type: str, model: str, prompt: str, history_size: int) -> None:
+    def __init__(self, llm_type: str, model: str, prompt: str, history_size: int, gpt_base_url: str) -> None:
         if llm_type not in (self.LLM_TYPE.GPT, self.LLM_TYPE.GEMINI):
             raise ValueError('Unknow LLM type: {}'.format(llm_type))
         self.llm_type = llm_type
@@ -26,6 +26,7 @@ class LLMClint():
         self.prompt = prompt
         self.history_size = history_size
         self.history_messages = []
+        self.base_url = gpt_base_url
 
     def _append_history_message(self, user_content: str, assistant_content: str):
         if not user_content or not assistant_content:
@@ -42,7 +43,7 @@ class LLMClint():
 
     def _translate_by_gpt(self, translation_task: TranslationTask):
         # https://platform.openai.com/docs/api-reference/chat/create?lang=python
-        client = OpenAI()
+        client = OpenAI(base_url=self.base_url)
         system_prompt = 'You are a translation engine.'
         messages = [{'role': 'system', 'content': system_prompt}]
         messages.extend(self.history_messages)
