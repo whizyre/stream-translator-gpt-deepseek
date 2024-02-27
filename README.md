@@ -75,3 +75,11 @@ Sample: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.s
 
 faster-whisper provides significant performance upgrades over the original OpenAI implementation (~ 4x faster, ~ 2x less memory).
 To use it, install the [cuDNN](https://developer.nvidia.com/cudnn) to your CUDA dir, Then you can run the CLI with `--use_faster_whisper`.
+
+## Contact me
+
+Telegram: [@ionic_bond](https://t.me/ionic_bond)
+
+## Donate
+
+[PayPal](https://www.paypal.com/donate/?hosted_button_id=U9WR47CFGPBPU)
