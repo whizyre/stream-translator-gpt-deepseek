@@ -277,9 +277,8 @@ def cli():
                         'it does not need to fill in.')
     parser.add_argument('--gpt_base_url',
                         type=str,
-                        default="https://api.openai.com/v1/",
-                        help='The base URL of the GPT API. '
-                        'If not set, the default URL will be used.')
+                        default=None,
+                        help='The base URL of the GPT API. ')
 
     args = parser.parse_args().__dict__
     url = args.pop('URL')
