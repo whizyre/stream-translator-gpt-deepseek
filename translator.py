@@ -33,7 +33,7 @@ def main(url, format, direct_url, cookies, device_index, frame_duration,
     if gpt_base_url:
         os.environ['OPENAI_BASE_URL'] = gpt_base_url
     if google_api_key:
-        genai.configure(api_key=google_api_key)        
+        genai.configure(api_key=google_api_key)
 
     getter_to_slicer_queue = queue.SimpleQueue()
     slicer_to_transcriber_queue = queue.SimpleQueue()
