@@ -25,13 +25,15 @@ def main(url, format, direct_url, cookies, device_index, frame_duration,
          prefix_retention_length, vad_threshold, model, language, use_faster_whisper,
          use_whisper_api, whisper_filters, hide_whisper_result, openai_api_key, google_api_key,
          gpt_translation_prompt, gpt_translation_history_size, gpt_model, gpt_translation_timeout,
-         retry_if_translation_fails, output_timestamps, cqhttp_url, cqhttp_token,
+         retry_if_translation_fails, output_timestamps, cqhttp_url, cqhttp_token, gpt_base_url,
          **transcribe_options):
 
     if openai_api_key:
         os.environ['OPENAI_API_KEY'] = openai_api_key
+    if gpt_base_url:
+        os.environ['OPENAI_BASE_URL'] = gpt_base_url
     if google_api_key:
-        genai.configure(api_key=google_api_key)
+        genai.configure(api_key=google_api_key)        
 
     getter_to_slicer_queue = queue.SimpleQueue()
     slicer_to_transcriber_queue = queue.SimpleQueue()
@@ -273,6 +275,10 @@ def cli():
                         default=None,
                         help='Token of cqhttp, if it is not set on the server side, '
                         'it does not need to fill in.')
+    parser.add_argument('--gpt_base_url',
+                        type=str,
+                        default=None,
+                        help='The base URL of the GPT API. ')
 
     args = parser.parse_args().__dict__
     url = args.pop('URL')
