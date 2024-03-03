@@ -2,7 +2,7 @@ import queue
 import requests
 from datetime import datetime
 
-from common import TranslationTask, LoopWorkerBase
+from .common import TranslationTask, LoopWorkerBase
 
 
 def _send_to_cqhttp(url: str, token: str, text: str):

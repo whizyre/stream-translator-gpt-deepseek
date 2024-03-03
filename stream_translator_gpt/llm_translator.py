@@ -9,7 +9,7 @@ from google.api_core.exceptions import InternalServerError
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from openai import OpenAI, APITimeoutError, APIConnectionError
 
-from common import TranslationTask, LoopWorkerBase
+from .common import TranslationTask, LoopWorkerBase
 
 
 class LLMClint():

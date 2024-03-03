@@ -7,7 +7,7 @@ import threading
 import ffmpeg
 import numpy as np
 
-from common import SAMPLE_RATE, LoopWorkerBase
+from .common import SAMPLE_RATE, LoopWorkerBase
 
 
 def _transport(ytdlp_proc, ffmpeg_proc):

@@ -1,6 +1,6 @@
 # stream-translator-gpt
 Command line utility to transcribe or translate audio from livestreams in real time. Uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) to 
-get livestream URLs from various services and OpenAI's [whisper](https://github.com/openai/whisper) for transcription/translation.
+get livestream URLs from various services and OpenAI's [Whisper](https://github.com/openai/whisper) for transcription/translation.
 
 This fork optimized the audio slicing logic based on [VAD](https://github.com/snakers4/silero-vad), 
 introduced OpenAI's [GPT API](https://platform.openai.com/docs/api-reference/chat/create) / Google's [Gemini API](https://makersuite.google.com/app/apikey) to support language translation beyond English, 
@@ -16,25 +16,24 @@ Sample: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.s
 ## Setup
 
 1. Setup a virtual environment.
-2. ```git clone https://github.com/ionic-bond/stream-translator-gpt```
-3. ```pip install -r requirements.txt```
-4. Make sure that pytorch is installed with CUDA support. Whisper will probably not run in real time on a CPU.
+2. ```pip install stream-translator-gpt```
+3. Make sure that pytorch is installed with CUDA support. Whisper will probably not run in real time on a CPU.
 
 ## Usage
 
-1. Translate live streaming audio:
+1. Translate live streaming:
 
-    ```python translator.py {URL} {flags...}```
+    ```stream-translator-gpt {URL} {flags...}```
 
     By default, the URL can be of the form ```twitch.tv/forsen``` and yt-dlp is used to obtain the .m3u8 link which is passed to ffmpeg.
 
 2. Translate PC device audio:
 
-    ```python translator.py device {flags...}```
+    ```stream-translator-gpt device {flags...}```
     
     Will use the system's default audio device as input.
 
-    If need to use another audio input device, `python print_all_devices.py` get device index and run the CLI with `--device_index`.
+    If need to use another audio input device, `stream-translator-gpt device --print_all_devices` get device index and run the CLI with `--device_index`.
 
 ## Flags
 
@@ -66,7 +65,7 @@ Sample: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.s
 |     `--gpt_translation_prompt`     |               |                 If set, will translate the result text to target language via GPT / Gemini API (According to which API key is filled in). Example: "Translate from Japanese to Chinese"                  |
 |  `--gpt_translation_history_size`  |       0       | The number of previous messages sent when calling the GPT / Gemini API. If the history size is 0, the translation will be run parallelly. If the history size > 0, the translation will be run serially. |
 |    `--gpt_translation_timeout`     |      15       |                                                    If the GPT / Gemini translation exceeds this number of seconds, the translation will be discarded.                                                    |
-|    `--gpt_base_url`     |      `https://api.openai.com/v1/`     |                                                    Customize the API endpoint of chatgpt                                                    |
+|          `--gpt_base_url`          |               |                                                                                    Customize the API endpoint of GPT.                                                                                    |
 |   `--retry_if_translation_fails`   |               |                                                               Retry when translation times out/fails. Used to generate subtitles offline.                                                                |
 |       `--output_timestamps`        |               |                                                                        Output the timestamp of the text when outputting the text.                                                                        |
 |           `--cqhttp_url`           |               |                                                                         If set, will send the result text to the cqhttp server.                                                                          |

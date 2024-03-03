@@ -1,10 +1,11 @@
+import os
 import queue
 import torch
 import warnings
 
 import numpy as np
 
-from common import TranslationTask, SAMPLE_RATE, LoopWorkerBase
+from .common import TranslationTask, SAMPLE_RATE, LoopWorkerBase
 
 warnings.filterwarnings('ignore')
 
@@ -19,7 +20,8 @@ def _init_jit_model(model_path: str, device=torch.device('cpu')):
 class VAD:
 
     def __init__(self):
-        self.model = _init_jit_model('silero_vad.jit')
+        current_dir = os.path.dirname(__file__)
+        self.model = _init_jit_model(os.path.join(current_dir, 'silero_vad.jit'))
 
     def is_speech(self, audio: np.array, threshold: float = 0.5, sampling_rate: int = 16000):
         if not torch.is_tensor(audio):

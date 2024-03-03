@@ -5,8 +5,8 @@ from scipy.io.wavfile import write as write_audio
 import numpy as np
 from openai import OpenAI
 
-import filters
-from common import TranslationTask, SAMPLE_RATE, LoopWorkerBase
+from . import filters
+from .common import TranslationTask, SAMPLE_RATE, LoopWorkerBase
 
 TEMP_AUDIO_FILE_NAME = 'temp.wav'
 
