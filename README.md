@@ -92,20 +92,20 @@ python3 ./stream-translator-gpt/translator.py
 
 | Option                             | Default Value | Description                                                                                                                                                                                              |
 | :--------------------------------- | :------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| *Input Options*                    |
+| **Input Options**                  |
 | `URL`                              |               | The URL of the stream. If a local file path is filled in, it will be used as input. If fill in "device", the input will be obtained from your PC device.                                                 |
 | `--format`                         | wa*           | Stream format code, this parameter will be passed directly to yt-dlp.                                                                                                                                    |
 | `--cookies`                        |               | Used to open member-only stream, this parameter will be passed directly to yt-dlp.                                                                                                                       |
 | `--direct_url`                     |               | Set this flag to pass the URL directly to ffmpeg. Otherwise, yt-dlp is used to obtain the stream URL.                                                                                                    |
 | `--device_index`                   |               | The index of the device that needs to be recorded. If not set, the system default recording device will be used.                                                                                         |
-| *Audio Slicing Options*            |
+| **Audio Slicing Options**          |
 | `--frame_duration`                 | 0.1           | The unit that processes live streaming data in seconds.                                                                                                                                                  |
 | `--continuous_no_speech_threshold` | 0.8           | Slice if there is no speech for a continuous period in second.                                                                                                                                           |
 | `--min_audio_length`               | 3.0           | Minimum slice audio length in seconds.                                                                                                                                                                   |
 | `--max_audio_length`               | 30.0          | Maximum slice audio length in seconds.                                                                                                                                                                   |
 | `--prefix_retention_length`        | 0.8           | The length of the retention prefix audio during slicing.                                                                                                                                                 |
 | `--vad_threshold`                  | 0.5           | The threshold of Voice activity detection. if the speech probability of a frame is higher than this value, then this frame is speech.                                                                    |
-| *Transcription Options*            |
+| **Transcription Options**          |
 | `--model`                          | small         | Select model size. See [here](https://github.com/openai/whisper#available-models-and-languages) for available models.                                                                                    |
 | `--task`                           | transcribe    | Whether to transcribe the audio (keep original language) or translate to english.                                                                                                                        |
 | `--language`                       | auto          | Language spoken in the stream. See [here](https://github.com/openai/whisper#available-models-and-languages) for available languages.                                                                     |
@@ -114,7 +114,7 @@ python3 ./stream-translator-gpt/translator.py
 | `--use_faster_whisper`             |               | Set this flag to use Faster Whisper implementation instead of the original OpenAI implementation                                                                                                         |
 | `--use_whisper_api`                |               | Set this flag to use OpenAI Whisper API instead of the original local Whipser.                                                                                                                           |
 | `--whisper_filters`                | emoji_filter  | Filters apply to whisper results, separated by ",".                                                                                                                                                      |
-| *Translation Options*              |
+| **Translation Options**            |
 | `--openai_api_key`                 |               | OpenAI API key if using GPT translation / Whisper API.                                                                                                                                                   |
 | `--google_api_key`                 |               | Google API key if using Gemini translation.                                                                                                                                                              |
 | `--gpt_model`                      | gpt-3.5-turbo | GPT model name, gpt-3.5-turbo or gpt-4. (If using Gemini, not need to change this)                                                                                                                       |
@@ -123,7 +123,7 @@ python3 ./stream-translator-gpt/translator.py
 | `--gpt_translation_timeout`        | 15            | If the GPT / Gemini translation exceeds this number of seconds, the translation will be discarded.                                                                                                       |
 | `--gpt_base_url`                   |               | Customize the API endpoint of GPT.                                                                                                                                                                       |
 | `--retry_if_translation_fails`     |               | Retry when translation times out/fails. Used to generate subtitles offline.                                                                                                                              |
-| *Output Options*                   |
+| **Output Options**                 |
 | `--output_timestamps`              |               | Output the timestamp of the text when outputting the text.                                                                                                                                               |
 | `--hide_transcribe_result`         |               | Hide the result of Whisper transcribe.                                                                                                                                                                   |
 | `--cqhttp_url`                     |               | If set, will send the result text to the cqhttp server.                                                                                                                                                  |
