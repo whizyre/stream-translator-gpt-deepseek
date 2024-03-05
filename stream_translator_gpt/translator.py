@@ -20,12 +20,12 @@ def _start_daemon_thread(func, *args, **kwargs):
     thread.start()
 
 
-def main(url, format, direct_url, cookies, device_index, frame_duration,
+def main(url, format, cookies, direct_url, device_index, frame_duration,
          continuous_no_speech_threshold, min_audio_length, max_audio_length,
          prefix_retention_length, vad_threshold, model, language, use_faster_whisper,
-         use_whisper_api, whisper_filters, hide_whisper_result, openai_api_key, google_api_key,
+         use_whisper_api, whisper_filters, openai_api_key, google_api_key,
          gpt_translation_prompt, gpt_translation_history_size, gpt_model, gpt_translation_timeout,
-         retry_if_translation_fails, output_timestamps, cqhttp_url, cqhttp_token, gpt_base_url,
+         retry_if_translation_fails, output_timestamps, hide_transcribe_result, cqhttp_url, cqhttp_token, gpt_base_url,
          **transcribe_options):
 
     if openai_api_key:
@@ -42,7 +42,7 @@ def main(url, format, direct_url, cookies, device_index, frame_duration,
     ) if gpt_translation_prompt else transcriber_to_translator_queue
 
     _start_daemon_thread(ResultExporter.work,
-                         output_whisper_result=not hide_whisper_result,
+                         output_whisper_result=not hide_transcribe_result,
                          output_timestamps=output_timestamps,
                          cqhttp_url=cqhttp_url,
                          cqhttp_token=cqhttp_token,
@@ -76,7 +76,7 @@ def main(url, format, direct_url, cookies, device_index, frame_duration,
         _start_daemon_thread(FasterWhisper.work,
                              model=model,
                              language=language,
-                             print_result=not hide_whisper_result,
+                             print_result=not hide_transcribe_result,
                              input_queue=slicer_to_transcriber_queue,
                              output_queue=transcriber_to_translator_queue,
                              whisper_filters=whisper_filters,
@@ -84,7 +84,7 @@ def main(url, format, direct_url, cookies, device_index, frame_duration,
     elif use_whisper_api:
         _start_daemon_thread(RemoteOpenaiWhisper.work,
                              language=language,
-                             print_result=not hide_whisper_result,
+                             print_result=not hide_transcribe_result,
                              input_queue=slicer_to_transcriber_queue,
                              output_queue=transcriber_to_translator_queue,
                              whisper_filters=whisper_filters,
@@ -93,7 +93,7 @@ def main(url, format, direct_url, cookies, device_index, frame_duration,
         _start_daemon_thread(OpenaiWhisper.work,
                              model=model,
                              language=language,
-                             print_result=not hide_whisper_result,
+                             print_result=not hide_transcribe_result,
                              input_queue=slicer_to_transcriber_queue,
                              output_queue=transcriber_to_translator_queue,
                              whisper_filters=whisper_filters,
@@ -135,21 +135,22 @@ def cli():
     parser.add_argument('URL',
                         type=str,
                         help='The URL of the stream. '
-                        'If fill in "device", the audio will be obtained from your PC device.')
+                        'If a local file path is filled in, it will be used as input. '
+                        'If fill in "device", the input will be obtained from your PC device.')
     parser.add_argument('--format',
                         type=str,
                         default='wa*',
                         help='Stream format code, '
                         'this parameter will be passed directly to yt-dlp.')
-    parser.add_argument('--direct_url',
-                        action='store_true',
-                        help='Set this flag to pass the URL directly to ffmpeg. '
-                        'Otherwise, yt-dlp is used to obtain the stream URL.')
     parser.add_argument('--cookies',
                         type=str,
                         default=None,
                         help='Used to open member-only stream, '
                         'this parameter will be passed directly to yt-dlp.')
+    parser.add_argument('--direct_url',
+                        action='store_true',
+                        help='Set this flag to pass the URL directly to ffmpeg. '
+                        'Otherwise, yt-dlp is used to obtain the stream URL.')
     parser.add_argument('--device_index',
                         type=int,
                         default=None,
@@ -228,9 +229,6 @@ def cli():
                         type=str,
                         default='emoji_filter',
                         help='Filters apply to whisper results, separated by ",".')
-    parser.add_argument('--hide_whisper_result',
-                        action='store_true',
-                        help='Hide the result of Whisper transcribe.')
     parser.add_argument('--openai_api_key',
                         type=str,
                         default=None,
@@ -273,6 +271,9 @@ def cli():
     parser.add_argument('--output_timestamps',
                         action='store_true',
                         help='Output the timestamp of the text when outputting the text.')
+    parser.add_argument('--hide_transcribe_result',
+                        action='store_true',
+                        help='Hide the result of Whisper transcribe.')
     parser.add_argument('--cqhttp_url',
                         type=str,
                         default=None,

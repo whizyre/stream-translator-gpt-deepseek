@@ -21,6 +21,7 @@ class LLMClint():
     def __init__(self, llm_type: str, model: str, prompt: str, history_size: int) -> None:
         if llm_type not in (self.LLM_TYPE.GPT, self.LLM_TYPE.GEMINI):
             raise ValueError('Unknow LLM type: {}'.format(llm_type))
+        print('Using {} API as translation engine.'.format(llm_type))
         self.llm_type = llm_type
         self.model = model
         self.prompt = prompt
