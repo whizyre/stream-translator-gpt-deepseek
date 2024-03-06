@@ -1,11 +1,10 @@
 [![PyPI version](https://badge.fury.io/py/stream-translator-gpt.svg)](https://badge.fury.io/py/stream-translator-gpt)
 # stream-translator-gpt
 Command line utility to transcribe or translate audio from livestreams in real time. Uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) to 
-get livestream URLs from various services and OpenAI's [Whisper](https://github.com/openai/whisper) for transcription/translation.
+get livestream URLs from various services and [Whisper](https://github.com/openai/whisper) / [Faster-Whisper](https://github.com/SYSTRAN/faster-whisper) for transcription.
 
 This fork optimized the audio slicing logic based on [VAD](https://github.com/snakers4/silero-vad), 
-introduced OpenAI's [GPT API](https://platform.openai.com/api-keys) / Google's [Gemini API](https://aistudio.google.com/app/apikey) to support language translation beyond English, 
-and supports getting audio from the devices.
+introduced [GPT API](https://platform.openai.com/api-keys) / [Gemini API](https://aistudio.google.com/app/apikey) to support language translation beyond English, and supports input from the audio devices.
 
 Try it on Colab: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ionic-bond/stream-translator-gpt/blob/main/stream_translator.ipynb)
 
@@ -15,7 +14,7 @@ Try it on Colab: [![Open In Colab](https://colab.research.google.com/assets/cola
 
 1. Python >= 3.8 (Recommend >= 3.10)
 2. [**Install CUDA on your system.**](https://developer.nvidia.com/cuda-downloads) You can check the installed CUDA version with ```nvcc --version```.
-3. [**Install cuDNN to your CUDA dir**](https://developer.nvidia.com/cuda-downloads) if you want to use **faseter-whisper**.
+3. [**Install cuDNN to your CUDA dir**](https://developer.nvidia.com/cuda-downloads) if you want to use **Faseter-Whisper**.
 4. [**Install PyTorch (with CUDA) to your Python.**](https://pytorch.org/get-started/locally/)
 5. [**Create a Google API key**](https://aistudio.google.com/app/apikey) if you want to use **Gemini API** for translation. (Recommend, Free 60 requests / minute)
 6. [**Create a OpenAI API key**](https://platform.openai.com/api-keys) if you want to use **Whisper API** for transcription or **GPT API** for translation.
@@ -107,7 +106,6 @@ python3 ./stream-translator-gpt/translator.py
 | `--vad_threshold`                  | 0.5           | The threshold of Voice activity detection. if the speech probability of a frame is higher than this value, then this frame is speech.                                                                    |
 | **Transcription Options**          |
 | `--model`                          | small         | Select model size. See [here](https://github.com/openai/whisper#available-models-and-languages) for available models.                                                                                    |
-| `--task`                           | transcribe    | Whether to transcribe the audio (keep original language) or translate to english.                                                                                                                        |
 | `--language`                       | auto          | Language spoken in the stream. See [here](https://github.com/openai/whisper#available-models-and-languages) for available languages.                                                                     |
 | `--beam_size`                      | 5             | Number of beams in beam search. Set to 0 to use greedy algorithm instead (faster but less accurate).                                                                                                     |
 | `--best_of`                        | 5             | Number of candidates when sampling with non-zero temperature.                                                                                                                                            |

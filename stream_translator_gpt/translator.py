@@ -196,12 +196,6 @@ def cli():
                         'Smaller models are faster and use less VRAM, '
                         'but are also less accurate. .en models are more accurate '
                         'but only work on English audio.')
-    parser.add_argument(
-        '--task',
-        type=str,
-        choices=['transcribe', 'translate'],
-        default='transcribe',
-        help='Whether to transcribe the audio (keep original language) or translate to English.')
     parser.add_argument('--language',
                         type=str,
                         default='auto',
@@ -332,7 +326,3 @@ def cli():
             os.remove(file)
 
     main(url, **args)
-
-
-if __name__ == '__main__':
-    cli()
