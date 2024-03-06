@@ -1,5 +1,46 @@
 [![PyPI version](https://badge.fury.io/py/stream-translator-gpt.svg)](https://badge.fury.io/py/stream-translator-gpt)
 # stream-translator-gpt
+
+```mermaid
+flowchart LR
+    subgraph ga["`**Input**`"]
+        direction LR
+        aa("`**FFmpeg**`")
+        ab("`**Device audio**`")
+        ac("`**yt-dlp**`")
+        ad("`**Local video file**`")
+        ae("`**Live streaming**`")
+        ac --> aa
+        ad --> aa
+        ae --> ac
+    end
+    subgraph gb["`**Audio Slicing**`"]
+        direction LR
+        ba("`**VAD**`")
+    end
+    subgraph gc["`**Transcription**`"]
+        direction LR
+        ca("`**Whisper**`")
+        cb("`**Faster-Whisper**`")
+        cc("`**Whisper API**`")
+    end
+    subgraph gd["`**Translation**`"]
+        direction LR
+        da("`**GPT**`")
+        db("`**Gemini**`")
+    end
+    subgraph ge["`**Output**`"]
+        direction LR
+        ea("`**Print to stdout**`")
+        eb("`**Cqhttp**`")
+    end
+    aa --> gb
+    ab --> gb
+    gb ==> gc
+    gc ==> gd
+    gd ==> ge
+```
+
 Command line utility to transcribe or translate audio from livestreams in real time. Uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) to 
 get livestream URLs from various services and [Whisper](https://github.com/openai/whisper) / [Faster-Whisper](https://github.com/SYSTRAN/faster-whisper) for transcription.
 
