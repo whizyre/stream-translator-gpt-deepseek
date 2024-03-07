@@ -1,5 +1,8 @@
 [![PyPI version](https://badge.fury.io/py/stream-translator-gpt.svg)](https://badge.fury.io/py/stream-translator-gpt)
+
 # stream-translator-gpt
+
+English | [简体中文](./README_CN.md)
 
 ```mermaid
 flowchart LR
