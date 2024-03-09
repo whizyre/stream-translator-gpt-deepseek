@@ -9,7 +9,7 @@ authors = [
   { name="ion", email="ionicbond3@gmail.com" },
 ]
 description = "Command line tool to transcribe & translate audio from livestreams in real time"
-readme = "README.md"
+readme = "README_PyPI.md"
 requires-python = ">=3.8"
 keywords = [
     "translator",
