@@ -8,7 +8,12 @@ from .common import TranslationTask, LoopWorkerBase
 def _send_to_cqhttp(url: str, token: str, text: str):
     headers = {'Authorization': 'Bearer {}'.format(token)} if token else None
     data = {'message': text}
-    requests.post(url, headers=headers, data=data)
+    requests.post(url, headers=headers, data=data, timeout=10)
+
+
+def _send_to_discord(webhook_url: str, text: str):
+    data = {'content': text}
+    requests.post(webhook_url, json=data, timeout=10)
 
 
 def _sec2str(second: float):
@@ -24,7 +29,7 @@ class ResultExporter(LoopWorkerBase):
         pass
 
     def loop(self, input_queue: queue.SimpleQueue[TranslationTask], output_whisper_result: bool,
-             output_timestamps: bool, cqhttp_url: str, cqhttp_token: str):
+             output_timestamps: bool, cqhttp_url: str, cqhttp_token: str, discord_webhook_url: str):
         while True:
             task = input_queue.get()
             timestamp_text = '{} --> {}'.format(_sec2str(task.time_range[0]),
@@ -41,3 +46,5 @@ class ResultExporter(LoopWorkerBase):
             text_to_send = text_to_send.strip()
             if cqhttp_url:
                 _send_to_cqhttp(cqhttp_url, cqhttp_token, text_to_send)
+            if discord_webhook_url:
+                _send_to_discord(discord_webhook_url, text_to_send)

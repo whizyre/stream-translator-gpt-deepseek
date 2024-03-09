@@ -24,9 +24,9 @@ def main(url, format, cookies, direct_url, device_index, frame_duration,
          continuous_no_speech_threshold, min_audio_length, max_audio_length,
          prefix_retention_length, vad_threshold, model, language, use_faster_whisper,
          use_whisper_api, whisper_filters, openai_api_key, google_api_key, gpt_translation_prompt,
-         gpt_translation_history_size, gpt_model, gpt_translation_timeout,
+         gpt_translation_history_size, gpt_model, gpt_translation_timeout, gpt_base_url,
          retry_if_translation_fails, output_timestamps, hide_transcribe_result, cqhttp_url,
-         cqhttp_token, gpt_base_url, **transcribe_options):
+         cqhttp_token, discord_webhook_url, **transcribe_options):
 
     if openai_api_key:
         os.environ['OPENAI_API_KEY'] = openai_api_key
@@ -46,6 +46,7 @@ def main(url, format, cookies, direct_url, device_index, frame_duration,
                          output_timestamps=output_timestamps,
                          cqhttp_url=cqhttp_url,
                          cqhttp_token=cqhttp_token,
+                         discord_webhook_url=discord_webhook_url,
                          input_queue=translator_to_exporter_queue)
     if gpt_translation_prompt:
         if google_api_key:
@@ -251,7 +252,7 @@ def cli():
         'If the history size > 0, the translation will be run serially.')
     parser.add_argument('--gpt_translation_timeout',
                         type=int,
-                        default=15,
+                        default=10,
                         help='If the GPT / Gemini translation exceeds this number of seconds, '
                         'the translation will be discarded.')
     parser.add_argument('--gpt_base_url',
@@ -277,6 +278,10 @@ def cli():
                         default=None,
                         help='Token of cqhttp, if it is not set on the server side, '
                         'it does not need to fill in.')
+    parser.add_argument('--discord_webhook_url',
+                        type=str,
+                        default=None,
+                        help='If set, will send the result text to the discord channel.')
 
     args = parser.parse_args().__dict__
     url = args.pop('URL')

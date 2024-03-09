@@ -131,6 +131,10 @@ python3 ./stream-translator-gpt/translator.py
 
     ```stream-translator-gpt {URL} --model large --language {input_language} --cqhttp_url {your_cqhttp_url} --cqhttp_token {your_cqhttp_token}```
 
+- Sending result to Discord:
+
+    ```stream-translator-gpt {URL} --model large --language {input_language} --discord_webhook_url {your_discord_webhook_url}```
+
 ## All options
 
 | Option                             | Default Value | Description                                                                                                                                                                                              |
@@ -162,7 +166,7 @@ python3 ./stream-translator-gpt/translator.py
 | `--gpt_model`                      | gpt-3.5-turbo | GPT model name, gpt-3.5-turbo or gpt-4. (If using Gemini, not need to change this)                                                                                                                       |
 | `--gpt_translation_prompt`         |               | If set, will translate the result text to target language via GPT / Gemini API (According to which API key is filled in). Example: "Translate from Japanese to Chinese"                                  |
 | `--gpt_translation_history_size`   | 0             | The number of previous messages sent when calling the GPT / Gemini API. If the history size is 0, the translation will be run parallelly. If the history size > 0, the translation will be run serially. |
-| `--gpt_translation_timeout`        | 15            | If the GPT / Gemini translation exceeds this number of seconds, the translation will be discarded.                                                                                                       |
+| `--gpt_translation_timeout`        | 10            | If the GPT / Gemini translation exceeds this number of seconds, the translation will be discarded.                                                                                                       |
 | `--gpt_base_url`                   |               | Customize the API endpoint of GPT.                                                                                                                                                                       |
 | `--retry_if_translation_fails`     |               | Retry when translation times out/fails. Used to generate subtitles offline.                                                                                                                              |
 | **Output Options**                 |
@@ -170,6 +174,7 @@ python3 ./stream-translator-gpt/translator.py
 | `--hide_transcribe_result`         |               | Hide the result of Whisper transcribe.                                                                                                                                                                   |
 | `--cqhttp_url`                     |               | If set, will send the result text to the cqhttp server.                                                                                                                                                  |
 | `--cqhttp_token`                   |               | Token of cqhttp, if it is not set on the server side, it does not need to fill in.                                                                                                                       |
+| `--discord_webhook_url`            |               | If set, will send the result text to the discord channel.                                                                                                                                                |
 
 ## Contact me
 

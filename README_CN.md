@@ -129,6 +129,10 @@ python3 ./stream-translator-gpt/translator.py
 
     ```stream-translator-gpt {URL} --model large --language {input_language} --cqhttp_url {your_cqhttp_url} --cqhttp_token {your_cqhttp_token}```
 
+- 将结果发送到 Discord：
+
+    ```stream-translator-gpt {URL} --model large --language {input_language} --discord_webhook_url {your_discord_webhook_url}```
+
 ## 所有选项
 
 | 选项                               | 默认值        | 描述                                                                                                                     |
@@ -146,7 +150,7 @@ python3 ./stream-translator-gpt/translator.py
 | `--max_audio_length`               | 30.0          | 切片音频的最大长度（以秒为单位）。                                                                                       |
 | `--prefix_retention_length`        | 0.8           | 在切割过程中保留前缀音频的长度。                                                                                         |
 | `--vad_threshold`                  | 0.5           | 人声检测阈值。如果一个帧的语音概率高于此值，那么这个帧就是人声。                                                         |
-| **语音转文字选项**                       |
+| **语音转文字选项**                 |
 | `--model`                          | small         | Whisper模型大小。请在[此处](https://github.com/openai/whisper#available-models-and-languages)查看可用模型。              |
 | `--language`                       | auto          | 直播流中的语言。请在[此处](https://github.com/openai/whisper#available-models-and-languages)查看可用语言。               |
 | `--beam_size`                      | 5             | 波束搜索中的波束数量。设置为0以使用贪婪算法（更快但准确度较低）。                                                        |
@@ -160,7 +164,7 @@ python3 ./stream-translator-gpt/translator.py
 | `--gpt_model`                      | gpt-3.5-turbo | GPT模型名称，gpt-3.5-turbo或gpt-4。（如果使用Gemini，则无需更改此设置）                                                  |
 | `--gpt_translation_prompt`         |               | 如果设置了该选项，将通过GPT / Gemini API（根据填写的API密钥决定）将结果文本翻译成目标语言。例如："从日语翻译成中文"      |
 | `--gpt_translation_history_size`   | 0             | 调用GPT / Gemini API时发送的先前消息数量。如果历史记录大小为0，则会并行运行翻译。如果历史记录大小> 0，则会串行运行翻译。 |
-| `--gpt_translation_timeout`        | 15            | 如果GPT / Gemini的翻译超过这个秒数，那么该次的翻译将被丢弃。                                                             |
+| `--gpt_translation_timeout`        | 10            | 如果GPT / Gemini的翻译超过这个秒数，那么该次的翻译将被丢弃。                                                             |
 | `--gpt_base_url`                   |               | 自定义GPT的API地址。                                                                                                     |
 | `--retry_if_translation_fails`     |               | 当翻译超时/失败时重试。用于离线生成字幕。                                                                                |
 | **输出选项**                       |
@@ -168,6 +172,7 @@ python3 ./stream-translator-gpt/translator.py
 | `--hide_transcribe_result`         |               | 隐藏语音转文字的结果。                                                                                                   |
 | `--cqhttp_url`                     |               | 如果设置，将会把结果文本发送到cqhttp服务器。                                                                             |
 | `--cqhttp_token`                   |               | cqhttp的令牌，如果在服务器端没有设置，不需要填写。                                                                       |
+| `--discord_webhook_url`            |               | 如果设置，则会将结果文本发送到 discord 频道。                                                                            |
 
 ## 联系我
 
