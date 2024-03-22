@@ -8,12 +8,18 @@ from .common import TranslationTask, LoopWorkerBase
 def _send_to_cqhttp(url: str, token: str, text: str):
     headers = {'Authorization': 'Bearer {}'.format(token)} if token else None
     data = {'message': text}
-    requests.post(url, headers=headers, data=data, timeout=10)
+    try:
+        requests.post(url, headers=headers, data=data, timeout=10)
+    except Exception as e:
+        print(e)
 
 
 def _send_to_discord(webhook_url: str, text: str):
     data = {'content': text}
-    requests.post(webhook_url, json=data, timeout=10)
+    try:
+        requests.post(webhook_url, json=data, timeout=10)
+    except Exception as e:
+        print(e)
 
 
 def _sec2str(second: float):
