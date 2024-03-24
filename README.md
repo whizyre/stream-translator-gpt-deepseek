@@ -58,7 +58,7 @@ Try it on Colab: [![Open In Colab](https://colab.research.google.com/assets/cola
 **Linux or Windows:**
 
 1. Python >= 3.8 (Recommend >= 3.10)
-2. [**Install CUDA on your system.**](https://developer.nvidia.com/cuda-downloads) You can check the installed CUDA version with ```nvcc --version```.
+2. [**Install CUDA 11 on your system.**](https://developer.nvidia.com/cuda-11-8-0-download-archive) (Faster-Whisper is not compatible with CUDA 12 for now).
 3. [**Install cuDNN to your CUDA dir**](https://developer.nvidia.com/cuda-downloads) if you want to use **Faseter-Whisper**.
 4. [**Install PyTorch (with CUDA) to your Python.**](https://pytorch.org/get-started/locally/)
 5. [**Create a Google API key**](https://aistudio.google.com/app/apikey) if you want to use **Gemini API** for translation. (Recommend, Free 60 requests / minute)
