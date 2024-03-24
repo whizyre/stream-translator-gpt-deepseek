@@ -166,7 +166,7 @@ def cli():
                         help='The unit that processes live streaming data in seconds.')
     parser.add_argument('--continuous_no_speech_threshold',
                         type=float,
-                        default=0.8,
+                        default=0.5,
                         help='Slice if there is no speech for a continuous period in second.')
     parser.add_argument('--min_audio_length',
                         type=float,
@@ -178,11 +178,11 @@ def cli():
                         help='Maximum slice audio length in seconds.')
     parser.add_argument('--prefix_retention_length',
                         type=float,
-                        default=0.8,
+                        default=0.5,
                         help='The length of the retention prefix audio during slicing.')
     parser.add_argument('--vad_threshold',
                         type=float,
-                        default=0.5,
+                        default=0.35,
                         help='The threshold of Voice activity detection.'
                         'if the speech probability of a frame is higher than this value, '
                         'then this frame is speech.')
