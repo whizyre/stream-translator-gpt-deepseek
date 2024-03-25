@@ -1,5 +1,7 @@
-import numpy as np
 from abc import ABC, abstractmethod
+from datetime import datetime
+
+import numpy as np
 from whisper.audio import SAMPLE_RATE
 
 
@@ -28,3 +30,10 @@ class LoopWorkerBase(ABC):
     def work(cls, **kwargs):
         obj = cls(**_auto_args(cls.__init__, kwargs))
         obj.loop(**_auto_args(obj.loop, kwargs))
+
+
+def sec2str(second: float):
+    dt = datetime.utcfromtimestamp(second)
+    result = dt.strftime('%H:%M:%S')
+    result += ',' + str(round(second * 10 % 10))
+    return result

@@ -6,7 +6,7 @@ import numpy as np
 from openai import OpenAI
 
 from . import filters
-from .common import TranslationTask, SAMPLE_RATE, LoopWorkerBase
+from .common import TranslationTask, SAMPLE_RATE, LoopWorkerBase, sec2str
 
 TEMP_AUDIO_FILE_NAME = 'temp.wav'
 
@@ -38,7 +38,7 @@ class OpenaiWhisper(LoopWorkerBase):
 
     def loop(self, input_queue: queue.SimpleQueue[TranslationTask],
              output_queue: queue.SimpleQueue[TranslationTask], whisper_filters: str,
-             print_result: bool, **transcribe_options):
+             print_result: bool, output_timestamps: bool, **transcribe_options):
         while True:
             task = input_queue.get()
             task.transcribed_text = _filter_text(self.transcribe(task.audio, **transcribe_options),
@@ -48,7 +48,12 @@ class OpenaiWhisper(LoopWorkerBase):
                     print('skip...')
                 continue
             if print_result:
-                print(task.transcribed_text)
+                if output_timestamps:
+                    timestamp_text = '{} --> {}'.format(sec2str(task.time_range[0]),
+                                                        sec2str(task.time_range[1]))
+                    print(timestamp_text + ' ' + task.transcribed_text)
+                else:
+                    print(task.transcribed_text)
             output_queue.put(task)
 
 

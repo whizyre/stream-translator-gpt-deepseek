@@ -1,8 +1,7 @@
 import queue
 import requests
-from datetime import datetime
 
-from .common import TranslationTask, LoopWorkerBase
+from .common import TranslationTask, LoopWorkerBase, sec2str
 
 
 def _send_to_cqhttp(url: str, token: str, text: str):
@@ -22,11 +21,6 @@ def _send_to_discord(webhook_url: str, text: str):
         print(e)
 
 
-def _sec2str(second: float):
-    dt = datetime.utcfromtimestamp(second)
-    result = dt.strftime('%H:%M:%S')
-    result += ',' + str(round(second * 10 % 10))
-    return result
 
 
 class ResultExporter(LoopWorkerBase):
@@ -38,8 +32,8 @@ class ResultExporter(LoopWorkerBase):
              output_timestamps: bool, cqhttp_url: str, cqhttp_token: str, discord_webhook_url: str):
         while True:
             task = input_queue.get()
-            timestamp_text = '{} --> {}'.format(_sec2str(task.time_range[0]),
-                                                _sec2str(task.time_range[1]))
+            timestamp_text = '{} --> {}'.format(sec2str(task.time_range[0]),
+                                                sec2str(task.time_range[1]))
             text_to_send = (task.transcribed_text + '\n') if output_whisper_result else ''
             if output_timestamps:
                 text_to_send = timestamp_text + '\n' + text_to_send
