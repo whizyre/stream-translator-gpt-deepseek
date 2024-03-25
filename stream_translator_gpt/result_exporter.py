@@ -21,8 +21,6 @@ def _send_to_discord(webhook_url: str, text: str):
         print(e)
 
 
-
-
 class ResultExporter(LoopWorkerBase):
 
     def __init__(self) -> None:
