@@ -47,7 +47,7 @@ flowchart LR
 
 一个用于直播流音频实时转文字/翻译的命令行工具。使用[yt-dlp](https://github.com/yt-dlp/yt-dlp)从直播URL获取音频数据，并使用[Whisper](https://github.com/openai/whisper) / [Faster-Whisper](https://github.com/SYSTRAN/faster-whisper)进行语音转文字。
 
-此分支基于[人声检测](https://github.com/snakers4/silero-vad)优化了音频切片逻辑，引入了[GPT API](https://platform.openai.com/api-keys) / [Gemini API](https://aistudio.google.com/app/apikey)，以支持除英语之外的语言翻译，并支持从计算机的音频设备输入。
+此Fork基于[人声检测](https://github.com/snakers4/silero-vad)优化了音频切片逻辑，引入了[GPT API](https://platform.openai.com/api-keys) / [Gemini API](https://aistudio.google.com/app/apikey)，以支持除英语之外的语言翻译，并支持从计算机的音频设备输入。
 
 在Colab上试用：[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ionic-bond/stream-translator-gpt/blob/main/stream_translator.ipynb)
 
@@ -65,7 +65,7 @@ flowchart LR
 **如果您是Windows用户，则还需：**
 
 1. [**在PATH中添加并安装ffmpeg。**](https://www.thewindowsclub.com/how-to-install-ffmpeg-on-windows-10#:~:text=Click%20New%20and%20type%20the,Click%20OK%20to%20apply%20changes.)
-2. 下载并添加[**yt-dlp**](https://github.com/yt-dlp/yt-dlp)至PATH路径。
+2. 下载并添加[**yt-dlp**](https://github.com/yt-dlp/yt-dlp)至PATH环境变量。
 
 ## 安装
 
@@ -134,6 +134,10 @@ python3 ./stream-translator-gpt/translator.py
 
     ```stream-translator-gpt {URL} --model large --language {input_language} --discord_webhook_url {your_discord_webhook_url}```
 
+- 将结果保存到.srt字幕文件中:
+
+    ```stream-translator-gpt {URL} --model large --language ja --gpt_translation_prompt "Translate from Japanese to Chinese" --google_api_key {your_google_key} --hide_transcribe_result --output_timestamps --output_file_path ./result.srt```
+
 ## 所有选项
 
 | 选项                               | 默认值        | 描述                                                                                                                     |
@@ -171,6 +175,7 @@ python3 ./stream-translator-gpt/translator.py
 | **输出选项**                       |
 | `--output_timestamps`              |               | 输出文本时同时输出时间戳。                                                                                               |
 | `--hide_transcribe_result`         |               | 隐藏语音转文字的结果。                                                                                                   |
+| `--output_file_path`               |               | 如果设置，将会把结果文本保存到这个路径。                                                                                 |
 | `--cqhttp_url`                     |               | 如果设置，将会把结果文本发送到cqhttp服务器。                                                                             |
 | `--cqhttp_token`                   |               | cqhttp的令牌，如果在服务器端没有设置，不需要填写。                                                                       |
 | `--discord_webhook_url`            |               | 如果设置，则会将结果文本发送到 discord 频道。                                                                            |

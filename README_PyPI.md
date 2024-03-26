@@ -90,3 +90,7 @@ python3 ./stream-translator-gpt/translator.py
 - Sending result to Discord:
 
     ```stream-translator-gpt {URL} --model large --language {input_language} --discord_webhook_url {your_discord_webhook_url}```
+
+- Saving result to a .srt subtitle file:
+
+    ```stream-translator-gpt {URL} --model large --language ja --gpt_translation_prompt "Translate from Japanese to Chinese" --google_api_key {your_google_key} --hide_transcribe_result --output_timestamps --output_file_path ./result.srt```

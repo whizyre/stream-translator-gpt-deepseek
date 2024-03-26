@@ -136,6 +136,10 @@ python3 ./stream-translator-gpt/translator.py
 
     ```stream-translator-gpt {URL} --model large --language {input_language} --discord_webhook_url {your_discord_webhook_url}```
 
+- Saving result to a .srt subtitle file:
+
+    ```stream-translator-gpt {URL} --model large --language ja --gpt_translation_prompt "Translate from Japanese to Chinese" --google_api_key {your_google_key} --hide_transcribe_result --output_timestamps --output_file_path ./result.srt```
+
 ## All options
 
 | Option                             | Default Value | Description                                                                                                                                                                                              |
@@ -173,6 +177,7 @@ python3 ./stream-translator-gpt/translator.py
 | **Output Options**                 |
 | `--output_timestamps`              |               | Output the timestamp of the text when outputting the text.                                                                                                                                               |
 | `--hide_transcribe_result`         |               | Hide the result of Whisper transcribe.                                                                                                                                                                   |
+| `--output_file_path`               |               | If set, will save the result text to this path.                                                                                                                                                          |
 | `--cqhttp_url`                     |               | If set, will send the result text to the cqhttp server.                                                                                                                                                  |
 | `--cqhttp_token`                   |               | Token of cqhttp, if it is not set on the server side, it does not need to fill in.                                                                                                                       |
 | `--discord_webhook_url`            |               | If set, will send the result text to the discord channel.                                                                                                                                                |
