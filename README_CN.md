@@ -146,7 +146,6 @@ python3 ./stream-translator-gpt/translator.py
 | `URL`                              |               | 直播流的URL。如果填写了本地文件路径，它将被用作输入。如果填写"device"，输入将从您的PC音频设备获取。                      |
 | `--format`                         | wa*           | 直播流格式代码，此参数将直接传递给yt-dlp。                                                                               |
 | `--cookies`                        |               | 用于打开仅会员可看的直播流，此参数将直接传递给yt-dlp。                                                                   |
-| `--direct_url`                     |               | 设置此标志以直接将URL传递给ffmpeg。否则，yt-dlp用于获取流URL。                                                           |
 | `--device_index`                   |               | 音频输入设备的index。如果未设置，则使用系统默认音频输入设备。                                                            |
 | **音频切割选项**                   |
 | `--frame_duration`                 | 0.1           | 处理实时流数据的单位（以秒为单位）。                                                                                     |

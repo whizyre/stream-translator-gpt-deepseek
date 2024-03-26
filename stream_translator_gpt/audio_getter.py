@@ -1,3 +1,4 @@
+import os
 import queue
 import signal
 import subprocess
@@ -21,20 +22,7 @@ def _transport(ytdlp_proc, ffmpeg_proc):
     ffmpeg_proc.kill()
 
 
-def _open_stream(url: str, direct_url: bool, format: str, cookies: str):
-    if direct_url:
-        try:
-            process = (ffmpeg.input(
-                url, loglevel='panic').output('pipe:',
-                                              format='s16le',
-                                              acodec='pcm_s16le',
-                                              ac=1,
-                                              ar=SAMPLE_RATE).run_async(pipe_stdout=True))
-        except ffmpeg.Error as e:
-            raise RuntimeError(f'Failed to load audio: {e.stderr.decode()}') from e
-
-        return process, None
-
+def _open_stream(url: str, format: str, cookies: str):
     cmd = ['yt-dlp', url, '-f', format, '-o', '-', '-q']
     if cookies:
         cmd.extend(['--cookies', cookies])
@@ -58,19 +46,29 @@ def _open_stream(url: str, direct_url: bool, format: str, cookies: str):
 
 class StreamAudioGetter(LoopWorkerBase):
 
-    def __init__(self, url: str, direct_url: bool, format: str, cookies: str,
+    def __init__(self, url: str, format: str, cookies: str,
                  frame_duration: float) -> None:
+        self._cleanup_ytdlp_cache()
+
         print('Opening stream: {}'.format(url))
-        self.ffmpeg_process, self.ytdlp_process = _open_stream(url, direct_url, format, cookies)
+        self.ffmpeg_process, self.ytdlp_process = _open_stream(url, format, cookies)
         self.byte_size = round(frame_duration * SAMPLE_RATE *
                                2)  # Factor 2 comes from reading the int16 stream as bytes
         signal.signal(signal.SIGINT, self._exit_handler)
+    
+    def __del__(self):
+        self._cleanup_ytdlp_cache()
 
     def _exit_handler(self, signum, frame):
         self.ffmpeg_process.kill()
         if self.ytdlp_process:
             self.ytdlp_process.kill()
         sys.exit(0)
+    
+    def _cleanup_ytdlp_cache(self):
+        for file in os.listdir('./'):
+            if file.startswith('--Frag'):
+                os.remove(file)
 
     def loop(self, output_queue: queue.SimpleQueue[np.array]):
         while self.ffmpeg_process.poll() is None:

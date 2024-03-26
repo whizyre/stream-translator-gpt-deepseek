@@ -8,7 +8,7 @@ from openai import OpenAI
 from . import filters
 from .common import TranslationTask, SAMPLE_RATE, LoopWorkerBase, sec2str
 
-TEMP_AUDIO_FILE_NAME = 'temp.wav'
+TEMP_AUDIO_FILE_NAME = '_whisper_api_temp.wav'
 
 
 def _filter_text(text: str, whisper_filters: str):
@@ -79,6 +79,10 @@ class RemoteOpenaiWhisper(OpenaiWhisper):
     def __init__(self, language: str) -> None:
         self.client = OpenAI()
         self.language = language
+    
+    def __del__(self):
+        if os.path.exists(TEMP_AUDIO_FILE_NAME):
+            os.remove(TEMP_AUDIO_FILE_NAME)
 
     def transcribe(self, audio: np.array, **transcribe_options) -> str:
         with open(TEMP_AUDIO_FILE_NAME, 'wb') as audio_file:

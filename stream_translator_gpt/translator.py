@@ -20,7 +20,7 @@ def _start_daemon_thread(func, *args, **kwargs):
     thread.start()
 
 
-def main(url, format, cookies, direct_url, device_index, frame_duration,
+def main(url, format, cookies, device_index, frame_duration,
          continuous_no_speech_threshold, min_audio_length, max_audio_length,
          prefix_retention_length, vad_threshold, model, language, use_faster_whisper,
          use_whisper_api, whisper_filters, openai_api_key, google_api_key, gpt_translation_prompt,
@@ -122,7 +122,6 @@ def main(url, format, cookies, direct_url, device_index, frame_duration,
                                   output_queue=getter_to_slicer_queue)
     else:
         StreamAudioGetter.work(url=url,
-                               direct_url=direct_url,
                                format=format,
                                cookies=cookies,
                                frame_duration=frame_duration,
@@ -152,10 +151,6 @@ def cli():
                         default=None,
                         help='Used to open member-only stream, '
                         'this parameter will be passed directly to yt-dlp.')
-    parser.add_argument('--direct_url',
-                        action='store_true',
-                        help='Set this flag to pass the URL directly to ffmpeg. '
-                        'Otherwise, yt-dlp is used to obtain the stream URL.')
     parser.add_argument('--device_index',
                         type=int,
                         default=None,
@@ -332,10 +327,5 @@ def cli():
 
     if args['beam_size'] == 0:
         args['beam_size'] = None
-
-    # Remove yt-dlp cache
-    for file in os.listdir('./'):
-        if file.startswith('--Frag'):
-            os.remove(file)
 
     main(url, **args)
