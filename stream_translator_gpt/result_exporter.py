@@ -35,7 +35,8 @@ class ResultExporter(LoopWorkerBase):
                 os.remove(output_file_path)
 
     def loop(self, input_queue: queue.SimpleQueue[TranslationTask], output_whisper_result: bool,
-             output_timestamps: bool, output_file_path: str, cqhttp_url: str, cqhttp_token: str, discord_webhook_url: str):
+             output_timestamps: bool, output_file_path: str, cqhttp_url: str, cqhttp_token: str,
+             discord_webhook_url: str):
         while True:
             task = input_queue.get()
             timestamp_text = '{} --> {}'.format(sec2str(task.time_range[0]),
