@@ -25,7 +25,7 @@ def main(url, format, cookies, direct_url, device_index, frame_duration,
          prefix_retention_length, vad_threshold, model, language, use_faster_whisper,
          use_whisper_api, whisper_filters, openai_api_key, google_api_key, gpt_translation_prompt,
          gpt_translation_history_size, gpt_model, gpt_translation_timeout, gpt_base_url,
-         retry_if_translation_fails, output_timestamps, hide_transcribe_result, cqhttp_url,
+         retry_if_translation_fails, output_timestamps, hide_transcribe_result, output_file_path, cqhttp_url,
          cqhttp_token, discord_webhook_url, **transcribe_options):
 
     if openai_api_key:
@@ -44,6 +44,7 @@ def main(url, format, cookies, direct_url, device_index, frame_duration,
     _start_daemon_thread(ResultExporter.work,
                          output_whisper_result=not hide_transcribe_result,
                          output_timestamps=output_timestamps,
+                         output_file_path=output_file_path,
                          cqhttp_url=cqhttp_url,
                          cqhttp_token=cqhttp_token,
                          discord_webhook_url=discord_webhook_url,
@@ -272,6 +273,10 @@ def cli():
     parser.add_argument('--hide_transcribe_result',
                         action='store_true',
                         help='Hide the result of Whisper transcribe.')
+    parser.add_argument('--output_file_path',
+                        type=str,
+                        default=None,
+                        help='If set, will save the result text to this path.')
     parser.add_argument('--cqhttp_url',
                         type=str,
                         default=None,

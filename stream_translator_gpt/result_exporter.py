@@ -1,3 +1,4 @@
+import os
 import queue
 import requests
 
@@ -21,13 +22,20 @@ def _send_to_discord(webhook_url: str, text: str):
         print(e)
 
 
+def _output_to_file(file_path: str, text: str):
+    with open(file_path, 'a') as f:
+        f.write(text + '\n\n')
+
+
 class ResultExporter(LoopWorkerBase):
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, output_file_path: str) -> None:
+        if output_file_path:
+            if os.path.exists(output_file_path):
+                os.remove(output_file_path)
 
     def loop(self, input_queue: queue.SimpleQueue[TranslationTask], output_whisper_result: bool,
-             output_timestamps: bool, cqhttp_url: str, cqhttp_token: str, discord_webhook_url: str):
+             output_timestamps: bool, output_file_path: str, cqhttp_url: str, cqhttp_token: str, discord_webhook_url: str):
         while True:
             task = input_queue.get()
             timestamp_text = '{} --> {}'.format(sec2str(task.time_range[0]),
@@ -42,6 +50,8 @@ class ResultExporter(LoopWorkerBase):
                 print('\033[1m{}\033[0m'.format(text_to_print))
                 text_to_send += task.translated_text
             text_to_send = text_to_send.strip()
+            if output_file_path:
+                _output_to_file(output_file_path, text_to_send)
             if cqhttp_url:
                 _send_to_cqhttp(cqhttp_url, cqhttp_token, text_to_send)
             if discord_webhook_url:
