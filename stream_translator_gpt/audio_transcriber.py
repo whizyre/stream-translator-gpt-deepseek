@@ -79,7 +79,7 @@ class RemoteOpenaiWhisper(OpenaiWhisper):
     def __init__(self, language: str) -> None:
         self.client = OpenAI()
         self.language = language
-    
+
     def __del__(self):
         if os.path.exists(TEMP_AUDIO_FILE_NAME):
             os.remove(TEMP_AUDIO_FILE_NAME)

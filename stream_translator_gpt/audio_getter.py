@@ -46,8 +46,7 @@ def _open_stream(url: str, format: str, cookies: str):
 
 class StreamAudioGetter(LoopWorkerBase):
 
-    def __init__(self, url: str, format: str, cookies: str,
-                 frame_duration: float) -> None:
+    def __init__(self, url: str, format: str, cookies: str, frame_duration: float) -> None:
         self._cleanup_ytdlp_cache()
 
         print('Opening stream: {}'.format(url))
@@ -55,7 +54,7 @@ class StreamAudioGetter(LoopWorkerBase):
         self.byte_size = round(frame_duration * SAMPLE_RATE *
                                2)  # Factor 2 comes from reading the int16 stream as bytes
         signal.signal(signal.SIGINT, self._exit_handler)
-    
+
     def __del__(self):
         self._cleanup_ytdlp_cache()
 
@@ -64,7 +63,7 @@ class StreamAudioGetter(LoopWorkerBase):
         if self.ytdlp_process:
             self.ytdlp_process.kill()
         sys.exit(0)
-    
+
     def _cleanup_ytdlp_cache(self):
         for file in os.listdir('./'):
             if file.startswith('--Frag'):
