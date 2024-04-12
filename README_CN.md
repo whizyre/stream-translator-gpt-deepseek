@@ -34,9 +34,10 @@ flowchart LR
     end
     subgraph ge["`**输出**`"]
         direction LR
-        ea("`**打印到stdout**`")
+        ea("`**打印到屏幕**`")
         eb("`**Cqhttp**`")
         ec("`**Discord**`")
+        ed("`**保存到文件**`")
     end
     aa --> gb
     ab --> gb

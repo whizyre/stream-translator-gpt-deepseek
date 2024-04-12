@@ -37,6 +37,7 @@ flowchart LR
         ea("`**Print to stdout**`")
         eb("`**Cqhttp**`")
         ec("`**Discord**`")
+        ed("`**Save to file**`")
     end
     aa --> gb
     ab --> gb
