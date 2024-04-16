@@ -23,7 +23,8 @@ def _send_to_discord(webhook_url: str, text: str):
 
 
 def _send_to_telegram(token: str, chat_id: int, text: str):
-    url = 'https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}'.format(token, chat_id, text)
+    url = 'https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}'.format(
+        token, chat_id, text)
     try:
         requests.post(url, timeout=10)
     except Exception as e:
