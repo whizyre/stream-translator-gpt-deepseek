@@ -22,6 +22,14 @@ def _send_to_discord(webhook_url: str, text: str):
         print(e)
 
 
+def _send_to_telegram(token: str, chat_id: int, text: str):
+    url = 'https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}'.format(token, chat_id, text)
+    try:
+        requests.post(url, timeout=10)
+    except Exception as e:
+        print(e)
+
+
 def _output_to_file(file_path: str, text: str):
     with open(file_path, 'a') as f:
         f.write(text + '\n\n')
@@ -36,7 +44,7 @@ class ResultExporter(LoopWorkerBase):
 
     def loop(self, input_queue: queue.SimpleQueue[TranslationTask], output_whisper_result: bool,
              output_timestamps: bool, output_file_path: str, cqhttp_url: str, cqhttp_token: str,
-             discord_webhook_url: str):
+             discord_webhook_url: str, telegram_token: str, telegram_chat_id: int):
         while True:
             task = input_queue.get()
             timestamp_text = '{} --> {}'.format(sec2str(task.time_range[0]),
@@ -57,3 +65,5 @@ class ResultExporter(LoopWorkerBase):
                 _send_to_cqhttp(cqhttp_url, cqhttp_token, text_to_send)
             if discord_webhook_url:
                 _send_to_discord(discord_webhook_url, text_to_send)
+            if telegram_token and telegram_chat_id:
+                _send_to_telegram(telegram_token, telegram_chat_id, text_to_send)

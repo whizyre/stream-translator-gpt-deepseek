@@ -25,7 +25,7 @@ def main(url, format, cookies, device_index, frame_duration, continuous_no_speec
          language, use_faster_whisper, use_whisper_api, whisper_filters, openai_api_key,
          google_api_key, gpt_translation_prompt, gpt_translation_history_size, gpt_model,
          gpt_translation_timeout, gpt_base_url, retry_if_translation_fails, output_timestamps,
-         hide_transcribe_result, output_file_path, cqhttp_url, cqhttp_token, discord_webhook_url,
+         hide_transcribe_result, output_file_path, cqhttp_url, cqhttp_token, discord_webhook_url, telegram_token, telegram_chat_id,
          **transcribe_options):
 
     if openai_api_key:
@@ -48,6 +48,8 @@ def main(url, format, cookies, device_index, frame_duration, continuous_no_speec
                          cqhttp_url=cqhttp_url,
                          cqhttp_token=cqhttp_token,
                          discord_webhook_url=discord_webhook_url,
+                         telegram_token=telegram_token,
+                         telegram_chat_id=telegram_chat_id,
                          input_queue=translator_to_exporter_queue)
     if gpt_translation_prompt:
         if google_api_key:
@@ -275,7 +277,7 @@ def cli():
     parser.add_argument('--cqhttp_url',
                         type=str,
                         default=None,
-                        help='If set, will send the result text to the cqhttp server.')
+                        help='If set, will send the result text to this Cqhttp server.')
     parser.add_argument('--cqhttp_token',
                         type=str,
                         default=None,
@@ -284,7 +286,15 @@ def cli():
     parser.add_argument('--discord_webhook_url',
                         type=str,
                         default=None,
-                        help='If set, will send the result text to the discord channel.')
+                        help='If set, will send the result text to this Discord channel.')
+    parser.add_argument('--telegram_token',
+                        type=str,
+                        default=None,
+                        help='Token of Telegram bot.')
+    parser.add_argument('--telegram_chat_id',
+                        type=int,
+                        default=None,
+                        help='If set, will send the result text to this Telegram chat. Needs to be used with \"--telegram_token\".')
 
     args = parser.parse_args().__dict__
     url = args.pop('URL')
