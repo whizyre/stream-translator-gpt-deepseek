@@ -37,7 +37,8 @@ flowchart LR
         ea("`**打印到屏幕**`")
         eb("`**Cqhttp**`")
         ec("`**Discord**`")
-        ed("`**保存到文件**`")
+        ed("`**Telegram**`")
+        ee("`**保存到文件**`")
     end
     aa --> gb
     ab --> gb
@@ -179,6 +180,8 @@ python3 ./stream-translator-gpt/translator.py
 | `--cqhttp_url`                     |               | 如果设置，将会把结果文本发送到cqhttp服务器。                                                                             |
 | `--cqhttp_token`                   |               | cqhttp的令牌，如果在服务器端没有设置，不需要填写。                                                                       |
 | `--discord_webhook_url`            |               | 如果设置，则会将结果文本发送到 discord 频道。                                                                            |
+| `--telegram_token`                 |               | Telegram的令牌bot.                                                                                                       |
+| `--telegram_chat_id`               |               | 如果设置，将把结果文本发送到此 Telegram Chat ID。需要与“--telegram_token”一起使用。                                      |
 
 ## 联系我
 

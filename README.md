@@ -37,7 +37,8 @@ flowchart LR
         ea("`**Print to stdout**`")
         eb("`**Cqhttp**`")
         ec("`**Discord**`")
-        ed("`**Save to file**`")
+        ed("`**Telegram**`")
+        ee("`**Save to file**`")
     end
     aa --> gb
     ab --> gb
@@ -181,6 +182,8 @@ python3 ./stream-translator-gpt/translator.py
 | `--cqhttp_url`                     |               | If set, will send the result text to the cqhttp server.                                                                                                                                                  |
 | `--cqhttp_token`                   |               | Token of cqhttp, if it is not set on the server side, it does not need to fill in.                                                                                                                       |
 | `--discord_webhook_url`            |               | If set, will send the result text to the discord channel.                                                                                                                                                |
+| `--telegram_token`                 |               | Token of Telegram bot.                                                                                                                                                                                   |
+| `--telegram_chat_id`               |               | If set, will send the result text to this Telegram chat. Needs to be used with \"--telegram_token\".                                                                                                     |
 
 ## Contact me
 
