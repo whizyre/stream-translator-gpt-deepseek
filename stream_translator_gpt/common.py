@@ -35,5 +35,5 @@ class LoopWorkerBase(ABC):
 def sec2str(second: float):
     dt = datetime.utcfromtimestamp(second)
     result = dt.strftime('%H:%M:%S')
-    result += ',' + str(round(second * 10 % 10))
+    result += ',' + str(int(second * 10 % 10))
     return result
