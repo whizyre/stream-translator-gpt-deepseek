@@ -161,10 +161,11 @@ def cli():
     parser.add_argument('--print_all_devices',
                         action='store_true',
                         help='Print all audio devices info then exit.')
-    parser.add_argument('--frame_duration',
-                        type=float,
-                        default=0.05,
-                        help='The unit that processes live streaming data in seconds, should be >= 0.03')
+    parser.add_argument(
+        '--frame_duration',
+        type=float,
+        default=0.05,
+        help='The unit that processes live streaming data in seconds, should be >= 0.03')
     parser.add_argument('--continuous_no_speech_threshold',
                         type=float,
                         default=0.5,
