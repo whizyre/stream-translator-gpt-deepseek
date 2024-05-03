@@ -150,7 +150,7 @@ python3 ./stream-translator-gpt/translator.py
 | `--cookies`                        |               | 用于打开仅会员可看的直播流，此参数将直接传递给yt-dlp。                                                                   |
 | `--device_index`                   |               | 音频输入设备的index。如果未设置，则使用系统默认音频输入设备。                                                            |
 | **音频切割选项**                   |
-| `--frame_duration`                 | 0.1           | 处理实时流数据的单位（以秒为单位）。                                                                                     |
+| `--frame_duration`                 | 0.05          | 处理实时流数据的单位（以秒为单位），需大于等于0.03。                                                                     |
 | `--continuous_no_speech_threshold` | 0.5           | 如果连续一段时间内没有语音，则进行切片（以秒为单位）。                                                                   |
 | `--min_audio_length`               | 3.0           | 切片音频的最小长度（以秒为单位）。                                                                                       |
 | `--max_audio_length`               | 30.0          | 切片音频的最大长度（以秒为单位）。                                                                                       |
