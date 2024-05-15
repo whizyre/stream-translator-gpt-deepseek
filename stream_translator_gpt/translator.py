@@ -23,10 +23,10 @@ def _start_daemon_thread(func, *args, **kwargs):
 def main(url, format, cookies, device_index, frame_duration, continuous_no_speech_threshold,
          min_audio_length, max_audio_length, prefix_retention_length, vad_threshold, model,
          language, use_faster_whisper, use_whisper_api, whisper_filters, openai_api_key,
-         google_api_key, gpt_translation_prompt, gpt_translation_history_size, gpt_model, gemini_model,
-         gpt_translation_timeout, gpt_base_url, retry_if_translation_fails, output_timestamps,
-         hide_transcribe_result, output_file_path, cqhttp_url, cqhttp_token, discord_webhook_url,
-         telegram_token, telegram_chat_id, **transcribe_options):
+         google_api_key, gpt_translation_prompt, gpt_translation_history_size, gpt_model,
+         gemini_model, gpt_translation_timeout, gpt_base_url, retry_if_translation_fails,
+         output_timestamps, hide_transcribe_result, output_file_path, cqhttp_url, cqhttp_token,
+         discord_webhook_url, telegram_token, telegram_chat_id, **transcribe_options):
 
     if openai_api_key:
         os.environ['OPENAI_API_KEY'] = openai_api_key
@@ -234,16 +234,17 @@ def cli():
                         type=str,
                         default=None,
                         help='Google API key if using Gemini translation.')
-    parser.add_argument(
-        '--gpt_model',
-        type=str,
-        default='gpt-3.5-turbo',
-        help='OpenAI\'s GPT model name, gpt-3.5-turbo / gpt-4 / gpt-4o.')
+    parser.add_argument('--gpt_model',
+                        type=str,
+                        default='gpt-3.5-turbo',
+                        help='OpenAI\'s GPT model name, gpt-3.5-turbo / gpt-4 / gpt-4o.')
     parser.add_argument(
         '--gemini_model',
         type=str,
         default='gemini-1.0-pro',
-        help='Google\'s Gemini model name, gemini-1.0-pro / gemini-1.5-flash-latest / gemini-1.5-pro-latest')
+        help=
+        'Google\'s Gemini model name, gemini-1.0-pro / gemini-1.5-flash-latest / gemini-1.5-pro-latest'
+    )
     parser.add_argument(
         '--gpt_translation_prompt',
         type=str,
