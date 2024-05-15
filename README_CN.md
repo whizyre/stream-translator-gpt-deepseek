@@ -142,46 +142,47 @@ python3 ./stream-translator-gpt/translator.py
 
 ## 所有选项
 
-| 选项                               | 默认值        | 描述                                                                                                                     |
-| :--------------------------------- | :------------ | :----------------------------------------------------------------------------------------------------------------------- |
+| 选项                               | 默认值         | 描述                                                                                                                     |
+| :--------------------------------- | :------------- | :----------------------------------------------------------------------------------------------------------------------- |
 | **输入选项**                       |
-| `URL`                              |               | 直播流的URL。如果填写了本地文件路径，它将被用作输入。如果填写"device"，输入将从您的PC音频设备获取。                      |
-| `--format`                         | wa*           | 直播流格式代码，此参数将直接传递给yt-dlp。                                                                               |
-| `--cookies`                        |               | 用于打开仅会员可看的直播流，此参数将直接传递给yt-dlp。                                                                   |
-| `--device_index`                   |               | 音频输入设备的index。如果未设置，则使用系统默认音频输入设备。                                                            |
+| `URL`                              |                | 直播流的URL。如果填写了本地文件路径，它将被用作输入。如果填写"device"，输入将从您的PC音频设备获取。                      |
+| `--format`                         | wa*            | 直播流格式代码，此参数将直接传递给yt-dlp。                                                                               |
+| `--cookies`                        |                | 用于打开仅会员可看的直播流，此参数将直接传递给yt-dlp。                                                                   |
+| `--device_index`                   |                | 音频输入设备的index。如果未设置，则使用系统默认音频输入设备。                                                            |
 | **音频切割选项**                   |
-| `--frame_duration`                 | 0.05          | 处理实时流数据的单位（以秒为单位），需大于等于0.03。                                                                     |
-| `--continuous_no_speech_threshold` | 0.5           | 如果连续一段时间内没有语音，则进行切片（以秒为单位）。                                                                   |
-| `--min_audio_length`               | 3.0           | 切片音频的最小长度（以秒为单位）。                                                                                       |
-| `--max_audio_length`               | 30.0          | 切片音频的最大长度（以秒为单位）。                                                                                       |
-| `--prefix_retention_length`        | 0.5           | 在切割过程中保留前缀音频的长度。                                                                                         |
-| `--vad_threshold`                  | 0.35          | 人声检测阈值。如果一个帧的语音概率高于此值，那么这个帧就是人声。                                                         |
+| `--frame_duration`                 | 0.05           | 处理实时流数据的单位（以秒为单位），需大于等于0.03。                                                                     |
+| `--continuous_no_speech_threshold` | 0.5            | 如果连续一段时间内没有语音，则进行切片（以秒为单位）。                                                                   |
+| `--min_audio_length`               | 3.0            | 切片音频的最小长度（以秒为单位）。                                                                                       |
+| `--max_audio_length`               | 30.0           | 切片音频的最大长度（以秒为单位）。                                                                                       |
+| `--prefix_retention_length`        | 0.5            | 在切割过程中保留前缀音频的长度。                                                                                         |
+| `--vad_threshold`                  | 0.35           | 人声检测阈值。如果一个帧的语音概率高于此值，那么这个帧就是人声。                                                         |
 | **语音转文字选项**                 |
-| `--model`                          | small         | Whisper模型大小。请在[此处](https://github.com/openai/whisper#available-models-and-languages)查看可用模型。              |
-| `--language`                       | auto          | 直播流中的语言。请在[此处](https://github.com/openai/whisper#available-models-and-languages)查看可用语言。               |
-| `--beam_size`                      | 5             | 波束搜索中的波束数量。设置为0以使用贪婪算法（更快但准确度较低）。                                                        |
-| `--best_of`                        | 5             | 在非零温度下采样时的候选者数量。                                                                                         |
-| `--use_faster_whisper`             |               | 设置此标志以使用Faster-Whisper实现，而不是原始的OpenAI实现                                                               |
-| `--use_whisper_api`                |               | 设置此标志以使用OpenAI Whisper API，而不是原始本地Whipser.                                                               |
-| `--whisper_filters`                | emoji_filter  | 应用于whisper结果的过滤器，由","分隔。                                                                                   |
+| `--model`                          | small          | Whisper模型大小。请在[此处](https://github.com/openai/whisper#available-models-and-languages)查看可用模型。              |
+| `--language`                       | auto           | 直播流中的语言。请在[此处](https://github.com/openai/whisper#available-models-and-languages)查看可用语言。               |
+| `--beam_size`                      | 5              | 波束搜索中的波束数量。设置为0以使用贪婪算法（更快但准确度较低）。                                                        |
+| `--best_of`                        | 5              | 在非零温度下采样时的候选者数量。                                                                                         |
+| `--use_faster_whisper`             |                | 设置此标志以使用Faster-Whisper实现，而不是原始的OpenAI实现                                                               |
+| `--use_whisper_api`                |                | 设置此标志以使用OpenAI Whisper API，而不是原始本地Whipser.                                                               |
+| `--whisper_filters`                | emoji_filter   | 应用于whisper结果的过滤器，由","分隔。                                                                                   |
 | **翻译选项**                       |
-| `--openai_api_key`                 |               | 如果使用GPT翻译/Whisper API，需要OpenAI API密钥。                                                                        |
-| `--google_api_key`                 |               | 如果使用Gemini翻译，需要Google API密钥。                                                                                 |
-| `--gpt_model`                      | gpt-3.5-turbo | GPT模型名称，gpt-3.5-turbo或gpt-4。（如果使用Gemini，则无需更改此设置）                                                  |
-| `--gpt_translation_prompt`         |               | 如果设置了该选项，将通过GPT / Gemini API（根据填写的API密钥决定）将结果文本翻译成目标语言。例如："从日语翻译成中文"      |
-| `--gpt_translation_history_size`   | 0             | 调用GPT / Gemini API时发送的先前消息数量。如果历史记录大小为0，则会并行运行翻译。如果历史记录大小> 0，则会串行运行翻译。 |
-| `--gpt_translation_timeout`        | 10            | 如果GPT / Gemini的翻译超过这个秒数，那么该次的翻译将被丢弃。                                                             |
-| `--gpt_base_url`                   |               | 自定义GPT的API地址。                                                                                                     |
-| `--retry_if_translation_fails`     |               | 当翻译超时/失败时重试。用于离线生成字幕。                                                                                |
+| `--openai_api_key`                 |                | 如果使用GPT翻译/Whisper API，需要OpenAI API密钥。                                                                        |
+| `--google_api_key`                 |                | 如果使用Gemini翻译，需要Google API密钥。                                                                                 |
+| `--gpt_model`                      | gpt-3.5-turbo  | GPT模型名称，gpt-3.5-turbo / gpt-4 / gpt-4o                                                                              |
+| `--gemini_model`                   | gemini-1.0-pro | Gemini模型名称，gemini-1.0-pro / gemini-1.5-flash-latest / gemini-1.5-pro-latest                                         |
+| `--gpt_translation_prompt`         |                | 如果设置了该选项，将通过GPT / Gemini API（根据填写的API密钥决定）将结果文本翻译成目标语言。例如："从日语翻译成中文"      |
+| `--gpt_translation_history_size`   | 0              | 调用GPT / Gemini API时发送的先前消息数量。如果历史记录大小为0，则会并行运行翻译。如果历史记录大小> 0，则会串行运行翻译。 |
+| `--gpt_translation_timeout`        | 10             | 如果GPT / Gemini的翻译超过这个秒数，那么该次的翻译将被丢弃。                                                             |
+| `--gpt_base_url`                   |                | 自定义GPT的API地址。                                                                                                     |
+| `--retry_if_translation_fails`     |                | 当翻译超时/失败时重试。用于离线生成字幕。                                                                                |
 | **输出选项**                       |
-| `--output_timestamps`              |               | 输出文本时同时输出时间戳。                                                                                               |
-| `--hide_transcribe_result`         |               | 隐藏语音转文字的结果。                                                                                                   |
-| `--output_file_path`               |               | 如果设置，将会把结果文本保存到这个路径。                                                                                 |
-| `--cqhttp_url`                     |               | 如果设置，将会把结果文本发送到cqhttp服务器。                                                                             |
-| `--cqhttp_token`                   |               | cqhttp的令牌，如果在服务器端没有设置，不需要填写。                                                                       |
-| `--discord_webhook_url`            |               | 如果设置，则会将结果文本发送到 discord 频道。                                                                            |
-| `--telegram_token`                 |               | Telegram的令牌bot.                                                                                                       |
-| `--telegram_chat_id`               |               | 如果设置，将把结果文本发送到此 Telegram Chat ID。需要与“--telegram_token”一起使用。                                      |
+| `--output_timestamps`              |                | 输出文本时同时输出时间戳。                                                                                               |
+| `--hide_transcribe_result`         |                | 隐藏语音转文字的结果。                                                                                                   |
+| `--output_file_path`               |                | 如果设置，将会把结果文本保存到这个路径。                                                                                 |
+| `--cqhttp_url`                     |                | 如果设置，将会把结果文本发送到cqhttp服务器。                                                                             |
+| `--cqhttp_token`                   |                | cqhttp的令牌，如果在服务器端没有设置，不需要填写。                                                                       |
+| `--discord_webhook_url`            |                | 如果设置，则会将结果文本发送到 discord 频道。                                                                            |
+| `--telegram_token`                 |                | Telegram的令牌bot.                                                                                                       |
+| `--telegram_chat_id`               |                | 如果设置，将把结果文本发送到此 Telegram Chat ID。需要与“--telegram_token”一起使用。                                      |
 
 ## 联系我
 
