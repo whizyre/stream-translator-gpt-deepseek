@@ -4,6 +4,6 @@ yt-dlp
 ffmpeg-python>=0.2.0,<0.3
 sounddevice<1.0
 openai-whisper<=20231117
-faster-whisper>=0.8.0,<1.0.0
+faster-whisper>=1.0.0,<2.0.0
 openai>=1.0,<2.0
 google-generativeai<1.0
