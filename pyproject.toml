@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stream-translator-gpt"
-version = "2024.5.4"
+version = "2024.5.25"
 authors = [
   { name="ion", email="ionicbond3@gmail.com" },
 ]
