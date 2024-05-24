@@ -1,6 +1,8 @@
+import json
 import queue
 import threading
 import time
+import re
 from collections import deque
 from datetime import datetime, timedelta
 
@@ -12,8 +14,25 @@ from openai import OpenAI, APITimeoutError, APIConnectionError
 from .common import TranslationTask, LoopWorkerBase
 
 
-class LLMClint():
+def parse_json_completion(completion):
+    pattern = re.compile(r'\{.*}', re.DOTALL)
+    json_match = pattern.search(completion)
 
+    if json_match:
+        try:
+            json_str = json_match.group(0)
+            json_obj = json.loads(json_str)
+            translate_text = json_obj.get('translation', None)
+            if not translate_text:
+                return completion
+            return translate_text
+        except json.JSONDecodeError:
+            return completion
+    else:
+        return completion
+
+
+class LLMClint():
     class LLM_TYPE:
         GPT = 'GPT'
         GEMINI = 'Gemini'
@@ -44,7 +63,7 @@ class LLMClint():
     def _translate_by_gpt(self, translation_task: TranslationTask):
         # https://platform.openai.com/docs/api-reference/chat/create?lang=python
         client = OpenAI()
-        system_prompt = 'You are a translation engine.'
+        system_prompt = 'You are a translation engine. Output the answer in json format, key is translation.'
         messages = [{'role': 'system', 'content': system_prompt}]
         messages.extend(self.history_messages)
         user_content = '{}: \n{}'.format(self.prompt, translation_task.transcribed_text)
@@ -59,7 +78,8 @@ class LLMClint():
                 presence_penalty=1,
                 messages=messages,
             )
-            translation_task.translated_text = completion.choices[0].message.content
+
+            translation_task.translated_text = parse_json_completion(completion.choices[0].message.content)
         except (APITimeoutError, APIConnectionError) as e:
             print(e)
             return
@@ -95,7 +115,7 @@ class LLMClint():
             response = client.generate_content(messages,
                                                generation_config=config,
                                                safety_settings=safety_settings)
-            translation_task.translated_text = response.text
+            translation_task.translated_text = parse_json_completion(response.text)
         except (ValueError, InternalServerError) as e:
             print(e)
             return
@@ -112,7 +132,6 @@ class LLMClint():
 
 
 class ParallelTranslator(LoopWorkerBase):
-
     PARALLEL_MAX_NUMBER = 10
 
     def __init__(self, llm_client: LLMClint, timeout: int, retry_if_translation_fails: bool):
