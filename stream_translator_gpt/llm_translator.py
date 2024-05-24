@@ -22,7 +22,9 @@ def parse_json_completion(completion):
         try:
             json_str = json_match.group(0)
             json_obj = json.loads(json_str)
-            translate_text = json_obj.get('translation')
+            translate_text = json_obj.get('translation', None)
+            if not translate_text:
+                return completion
             return translate_text
         except json.JSONDecodeError:
             return completion
