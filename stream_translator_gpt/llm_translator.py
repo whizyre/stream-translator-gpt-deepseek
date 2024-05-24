@@ -33,6 +33,7 @@ def parse_json_completion(completion):
 
 
 class LLMClint():
+
     class LLM_TYPE:
         GPT = 'GPT'
         GEMINI = 'Gemini'
@@ -79,7 +80,8 @@ class LLMClint():
                 messages=messages,
             )
 
-            translation_task.translated_text = parse_json_completion(completion.choices[0].message.content)
+            translation_task.translated_text = parse_json_completion(
+                completion.choices[0].message.content)
         except (APITimeoutError, APIConnectionError) as e:
             print(e)
             return
