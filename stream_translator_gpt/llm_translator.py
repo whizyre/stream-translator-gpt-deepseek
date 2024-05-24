@@ -14,7 +14,7 @@ from openai import OpenAI, APITimeoutError, APIConnectionError
 from .common import TranslationTask, LoopWorkerBase
 
 
-def parse_json_completion(completion):
+def _parse_json_completion(completion):
     pattern = re.compile(r'\{.*}', re.DOTALL)
     json_match = pattern.search(completion)
 
@@ -80,7 +80,7 @@ class LLMClint():
                 messages=messages,
             )
 
-            translation_task.translated_text = parse_json_completion(
+            translation_task.translated_text = _parse_json_completion(
                 completion.choices[0].message.content)
         except (APITimeoutError, APIConnectionError) as e:
             print(e)
@@ -100,7 +100,7 @@ class LLMClint():
             gemini_messages.append(gemini_message)
         return gemini_messages
 
-    def _translate_gy_gemini(self, translation_task: TranslationTask):
+    def _translate_by_gemini(self, translation_task: TranslationTask):
         # https://ai.google.dev/tutorials/python_quickstart
         client = genai.GenerativeModel(self.model)
         messages = self._gpt_to_gemini(self.history_messages)
@@ -117,7 +117,7 @@ class LLMClint():
             response = client.generate_content(messages,
                                                generation_config=config,
                                                safety_settings=safety_settings)
-            translation_task.translated_text = parse_json_completion(response.text)
+            translation_task.translated_text = _parse_json_completion(response.text)
         except (ValueError, InternalServerError) as e:
             print(e)
             return
@@ -128,7 +128,7 @@ class LLMClint():
         if self.llm_type == self.LLM_TYPE.GPT:
             self._translate_by_gpt(translation_task)
         elif self.llm_type == self.LLM_TYPE.GEMINI:
-            self._translate_gy_gemini(translation_task)
+            self._translate_by_gemini(translation_task)
         else:
             raise ValueError('Unknow LLM type: {}'.format(self.llm_type))
 

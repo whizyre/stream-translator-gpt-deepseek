@@ -16,7 +16,7 @@ Try it on Colab: [![Open In Colab](https://colab.research.google.com/assets/cola
 2. [**Install CUDA 11 on your system.**](https://developer.nvidia.com/cuda-11-8-0-download-archive) (Faster-Whisper is not compatible with CUDA 12 for now).
 3. [**Install cuDNN to your CUDA dir**](https://developer.nvidia.com/cuda-downloads) if you want to use **Faseter-Whisper**.
 4. [**Install PyTorch (with CUDA) to your Python.**](https://pytorch.org/get-started/locally/)
-5. [**Create a Google API key**](https://aistudio.google.com/app/apikey) if you want to use **Gemini API** for translation. (Recommend, Free 60 requests / minute)
+5. [**Create a Google API key**](https://aistudio.google.com/app/apikey) if you want to use **Gemini API** for translation. (Free 15 requests / minute)
 6. [**Create a OpenAI API key**](https://platform.openai.com/api-keys) if you want to use **Whisper API** for transcription or **GPT API** for translation.
 
 **If you are in Windows, you also need to:**
@@ -29,7 +29,7 @@ Try it on Colab: [![Open In Colab](https://colab.research.google.com/assets/cola
 **Install release version from PyPI (Recommend):**
 
 ```
-pip install stream-translator-gpt
+pip install stream-translator-gpt -U
 stream-translator-gpt
 ```
 

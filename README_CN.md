@@ -61,7 +61,7 @@ flowchart LR
 2. [**在您的系统上安装CUDA 11。**](https://developer.nvidia.com/cuda-11-8-0-download-archive) (Faster-Whisper和CUDA 12可能有兼容性问题)
 3. 如果你想使用 **Faseter-Whisper**, 需要[**将cuDNN安装到你的CUDA目录中**](https://developer.nvidia.com/cuda-downloads)。
 4. [**将PyTorch（带有CUDA）安装到您的Python中。**](https://pytorch.org/get-started/locally/)
-5. 如果你想用 **Gemini API** 进行翻译，需要[**创建一个Google API密钥**](https://aistudio.google.com/app/apikey)。（推荐，每分钟免费60次请求）
+5. 如果你想用 **Gemini API** 进行翻译，需要[**创建一个Google API密钥**](https://aistudio.google.com/app/apikey)。（每分钟免费15次请求）
 6. 如果你想用 **Whisper API** 进行转录或 **GPT API** 进行翻译，需要[**创建一个OpenAI API密钥**](https://platform.openai.com/api-keys)
 
 **如果您是Windows用户，则还需：**
@@ -74,7 +74,7 @@ flowchart LR
 **从 PyPI 安装稳定版本（推荐）：**
 
 ```
-pip install stream-translator-gpt
+pip install stream-translator-gpt -U
 stream-translator-gpt
 ```
 
