@@ -22,7 +22,7 @@ def parse_json_completion(completion):
         try:
             json_str = json_match.group(0)
             json_obj = json.loads(json_str)
-            translate_text = json_obj.get('translate')
+            translate_text = json_obj.get('translation')
             return translate_text
         except json.JSONDecodeError:
             return completion
@@ -61,7 +61,7 @@ class LLMClint():
     def _translate_by_gpt(self, translation_task: TranslationTask):
         # https://platform.openai.com/docs/api-reference/chat/create?lang=python
         client = OpenAI()
-        system_prompt = 'You are a translation engine.Output the answer in json format, key is translate.'
+        system_prompt = 'You are a translation engine. Output the answer in json format, key is translation.'
         messages = [{'role': 'system', 'content': system_prompt}]
         messages.extend(self.history_messages)
         user_content = '{}: \n{}'.format(self.prompt, translation_task.transcribed_text)
