@@ -7,7 +7,7 @@ from collections import deque
 from datetime import datetime, timedelta
 
 import google.generativeai as genai
-from google.api_core.exceptions import InternalServerError
+from google.api_core.exceptions import InternalServerError, ResourceExhausted
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from openai import OpenAI, APITimeoutError, APIConnectionError
 
@@ -118,7 +118,7 @@ class LLMClint():
                                                generation_config=config,
                                                safety_settings=safety_settings)
             translation_task.translated_text = _parse_json_completion(response.text)
-        except (ValueError, InternalServerError) as e:
+        except (ValueError, InternalServerError, ResourceExhausted) as e:
             print(e)
             return
         if self.history_size:
