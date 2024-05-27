@@ -77,7 +77,7 @@ class RemoteOpenaiWhisper(OpenaiWhisper):
     # https://platform.openai.com/docs/api-reference/audio/createTranscription?lang=python
 
     def __init__(self, language: str) -> None:
-        self.client = OpenAI()
+        self.client = OpenAI(api_key="<deepseek api key>", base_url="https://api.deepseek.com")
         self.language = language
 
     def __del__(self):
