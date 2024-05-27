@@ -32,6 +32,8 @@ def main(url, format, cookies, device_index, frame_duration, continuous_no_speec
         os.environ['OPENAI_API_KEY'] = openai_api_key
     if gpt_base_url:
         os.environ['OPENAI_BASE_URL'] = gpt_base_url
+    else:
+        os.environ['OPENAI_BASE_URL'] = "https://api.deepseek.com"
     if google_api_key:
         genai.configure(api_key=google_api_key)
 
@@ -229,7 +231,7 @@ def cli():
     parser.add_argument('--openai_api_key',
                         type=str,
                         default=None,
-                        help='OpenAI API key if using GPT translation / Whisper API.')
+                        help='API key if using GPT translation / Whisper API (OpenAI or DeepSeek).')
     parser.add_argument('--google_api_key',
                         type=str,
                         default=None,
